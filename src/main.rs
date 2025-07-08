@@ -3,6 +3,7 @@ use winit::{error::EventLoopError, event_loop::EventLoop};
 use crate::app::App;
 
 mod app;
+mod vertex;
 mod wgpu_ctx;
 
 fn main() -> Result<(), EventLoopError> {

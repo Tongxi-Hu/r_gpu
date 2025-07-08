@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
+use wgpu::util::DeviceExt;
 use winit::{dpi::PhysicalSize, window::Window};
+
+use crate::vertex::{VERTEX_LIST, create_vertex_buffer_layout};
 
 pub struct WgpuCtx<'w> {
     surface: wgpu::Surface<'w>,
@@ -9,6 +12,7 @@ pub struct WgpuCtx<'w> {
     device: wgpu::Device,
     queue: wgpu::Queue,
     render_pipeline: wgpu::RenderPipeline,
+    vertex_buffer: wgpu::Buffer,
 }
 
 impl<'w> WgpuCtx<'w> {
@@ -41,8 +45,14 @@ impl<'w> WgpuCtx<'w> {
         let height = size.height.max(1);
         let surface_config = surface.get_default_config(&adapter, width, height).unwrap();
         surface.configure(&device, &surface_config);
-
         let render_pipeline = create_pipeline(&device, surface_config.format);
+
+        let bytes: &[u8] = bytemuck::cast_slice(&VERTEX_LIST);
+        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: None,
+            contents: bytes,
+            usage: wgpu::BufferUsages::VERTEX,
+        });
 
         Self {
             surface,
@@ -51,6 +61,7 @@ impl<'w> WgpuCtx<'w> {
             device,
             queue,
             render_pipeline,
+            vertex_buffer,
         }
     }
 
@@ -92,7 +103,8 @@ impl<'w> WgpuCtx<'w> {
                 occlusion_query_set: None,
             });
             render_pass.set_pipeline(&self.render_pipeline);
-            render_pass.draw(0..3, 0..2);
+            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+            render_pass.draw(0..VERTEX_LIST.len() as u32, 0..1);
         }
 
         self.queue.submit(Some(encoder.finish()));
@@ -114,7 +126,7 @@ fn create_pipeline(
         vertex: wgpu::VertexState {
             module: &shader,
             entry_point: Some("vs_main"),
-            buffers: &[],
+            buffers: &[create_vertex_buffer_layout()],
             compilation_options: Default::default(),
         },
         fragment: Some(wgpu::FragmentState {
