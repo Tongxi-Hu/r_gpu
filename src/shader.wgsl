@@ -1,23 +1,31 @@
-
-struct Input {
-    @location(0) position: vec3<f32>,
-    @location(1) color: vec3<f32>,
+struct Uniform{
+    color: vec4<f32>,
+    resolution: vec2<f32>,
 }
 
-struct Inter {
-    @builtin(position) pos: vec4<f32>,
-    @location(0) color: vec3<f32>,
+struct Input{
+    @location(0) position:vec2<f32>,
 }
+
+struct Inter{
+    @builtin(position) position:vec4<f32>,
+}
+
+@group(0) @binding(0) var<uniform> uni:Uniform;
 
 @vertex
 fn vs_main(in: Input)-> Inter {
     var inter: Inter;
-    inter.pos = vec4<f32>( in.position, 1.0);
-    inter.color= in.color;
+    let position=in.position;
+    let zero_to_one= position/uni.resolution;
+    let zero_to_two=zero_to_one * 2.0;
+    let flipped= zero_to_two - 1.0;
+    let clipped_space = flipped*vec2<f32>(1,-1);
+    inter.position = vec4<f32>(clipped_space,0, 1);
     return inter;
 }
 
 @fragment
-fn fs_main(inter: Inter)-> @location(0) vec4<f32> {
-    return vec4<f32>(inter.color, 1.0);
+fn fs_main()-> @location(0) vec4<f32> {
+    return uni.color;
 }

@@ -14,6 +14,8 @@ pub struct WgpuCtx<'w> {
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
+    uniform_buffer: wgpu::Buffer,
+    uniform_bind_group: wgpu::BindGroup,
 }
 
 impl<'w> WgpuCtx<'w> {
@@ -46,19 +48,60 @@ impl<'w> WgpuCtx<'w> {
         let height = size.height.max(1);
         let surface_config = surface.get_default_config(&adapter, width, height).unwrap();
         surface.configure(&device, &surface_config);
-        let render_pipeline = create_pipeline(&device, surface_config.format);
 
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: None,
-            contents: bytemuck::cast_slice(&VERTEX_LIST),
+            contents: bytemuck::cast_slice(VERTEX_LIST),
             usage: wgpu::BufferUsages::VERTEX,
         });
 
         let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: None,
-            contents: bytemuck::cast_slice(&INDEX_LIST),
+            contents: bytemuck::cast_slice(INDEX_LIST),
             usage: wgpu::BufferUsages::INDEX,
         });
+
+        let uniform_content = &[1.0, 1.0, 0.0, 1.0, width as f32, height as f32, 0.0, 0.0];
+
+        let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: None,
+            contents: bytemuck::cast_slice(uniform_content),
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        });
+
+        let uniform_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                label: None,
+                entries: &[wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                }],
+            });
+
+        let uniform_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: None,
+            layout: &uniform_bind_group_layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: uniform_buffer.as_entire_binding(),
+            }],
+        });
+
+        let render_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: None,
+                bind_group_layouts: &[&uniform_bind_group_layout],
+                push_constant_ranges: &[],
+            });
+
+        let render_pipeline =
+            create_pipeline(&device, surface_config.format, &render_pipeline_layout);
 
         Self {
             surface,
@@ -69,6 +112,8 @@ impl<'w> WgpuCtx<'w> {
             render_pipeline,
             vertex_buffer,
             index_buffer,
+            uniform_buffer,
+            uniform_bind_group,
         }
     }
 
@@ -112,6 +157,7 @@ impl<'w> WgpuCtx<'w> {
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+            render_pass.set_bind_group(0, &self.uniform_bind_group, &[]);
             render_pass.draw_indexed(0..INDEX_LIST.len() as u32, 0, 0..1);
         }
 
@@ -123,6 +169,7 @@ impl<'w> WgpuCtx<'w> {
 fn create_pipeline(
     device: &wgpu::Device,
     swap_chain_format: wgpu::TextureFormat,
+    render_pipeline_layout: &wgpu::PipelineLayout,
 ) -> wgpu::RenderPipeline {
     let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
         label: None,
@@ -130,7 +177,7 @@ fn create_pipeline(
     });
     device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         label: None,
-        layout: None,
+        layout: Some(render_pipeline_layout),
         vertex: wgpu::VertexState {
             module: &shader,
             entry_point: Some("vs_main"),
