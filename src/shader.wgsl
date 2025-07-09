@@ -1,6 +1,7 @@
 struct Uniform{
     color: vec4<f32>,
     resolution: vec2<f32>,
+    translation: vec2<f32>,
 }
 
 struct Input{
@@ -16,7 +17,7 @@ struct Inter{
 @vertex
 fn vs_main(in: Input)-> Inter {
     var inter: Inter;
-    let position=in.position;
+    let position=in.position+uni.translation;
     let zero_to_one= position/uni.resolution;
     let zero_to_two=zero_to_one * 2.0;
     let flipped= zero_to_two - 1.0;

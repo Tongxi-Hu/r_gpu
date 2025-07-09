@@ -16,6 +16,7 @@ pub struct WgpuCtx<'w> {
     index_buffer: wgpu::Buffer,
     uniform_buffer: wgpu::Buffer,
     uniform_bind_group: wgpu::BindGroup,
+    translation: [f32; 2],
 }
 
 impl<'w> WgpuCtx<'w> {
@@ -61,7 +62,17 @@ impl<'w> WgpuCtx<'w> {
             usage: wgpu::BufferUsages::INDEX,
         });
 
-        let uniform_content = &[1.0, 1.0, 0.0, 1.0, width as f32, height as f32, 0.0, 0.0];
+        let translation = [0.0, 0.0];
+        let uniform_content = &[
+            1.0,
+            1.0,
+            0.0,
+            1.0,
+            width as f32,
+            height as f32,
+            translation[0],
+            translation[1],
+        ];
 
         let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: None,
@@ -114,6 +125,7 @@ impl<'w> WgpuCtx<'w> {
             index_buffer,
             uniform_buffer,
             uniform_bind_group,
+            translation,
         }
     }
 
@@ -124,6 +136,21 @@ impl<'w> WgpuCtx<'w> {
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
         self.surface_config.width = size.width.max(1);
         self.surface_config.height = size.height.max(1);
+        self.translation = [self.translation[0] + 10.0, self.translation[1] + 10.0];
+        self.queue.write_buffer(
+            &self.uniform_buffer,
+            0,
+            bytemuck::cast_slice(&[
+                1.0,
+                1.0,
+                0.0,
+                1.0,
+                size.width.max(1) as f32,
+                size.height.max(1) as f32,
+                self.translation[0],
+                self.translation[1],
+            ]),
+        );
         self.surface.configure(&self.device, &self.surface_config);
     }
 
