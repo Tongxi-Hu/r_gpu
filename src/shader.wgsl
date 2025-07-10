@@ -1,6 +1,8 @@
 struct Uniform{
     color: vec4<f32>,
     resolution: vec2<f32>,
+    scaling:vec2<f32>,
+    rotation: vec2<f32>,
     translation: vec2<f32>,
 }
 
@@ -17,8 +19,12 @@ struct Inter{
 @vertex
 fn vs_main(in: Input)-> Inter {
     var inter: Inter;
-    let position=in.position+uni.translation;
-    let zero_to_one= position/uni.resolution;
+    let scaled=in.position*uni.scaling;
+    let rotated=vec2<f32>(
+    scaled.x * uni.rotation.x - scaled.y * uni.rotation.y,
+    scaled.x * uni.rotation.y + scaled.y * uni.rotation.x);
+    let translated=rotated+uni.translation;
+    let zero_to_one= translated/uni.resolution;
     let zero_to_two=zero_to_one * 2.0;
     let flipped= zero_to_two - 1.0;
     let clipped_space = flipped*vec2<f32>(1,-1);

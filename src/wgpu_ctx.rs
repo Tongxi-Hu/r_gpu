@@ -1,9 +1,14 @@
-use std::sync::Arc;
+use std::{f32, sync::Arc};
 
 use wgpu::util::DeviceExt;
 use winit::{dpi::PhysicalSize, window::Window};
 
 use crate::vertex::{INDEX_LIST, VERTEX_LIST, create_vertex_buffer_layout};
+
+const DEFAULT_SCALING: [f32; 2] = [1.0, 1.0];
+const DEFAULT_ROTATION: f32 = 90.0;
+const PI_IN_DEGREE: f32 = 180.0;
+const DEFAULT_TRANSLATION: [f32; 2] = [200.0, 200.0];
 
 pub struct WgpuCtx<'w> {
     surface: wgpu::Surface<'w>,
@@ -16,6 +21,9 @@ pub struct WgpuCtx<'w> {
     index_buffer: wgpu::Buffer,
     uniform_buffer: wgpu::Buffer,
     uniform_bind_group: wgpu::BindGroup,
+
+    scaling: [f32; 2],
+    rotation_angle: f32,
     translation: [f32; 2],
 }
 
@@ -62,16 +70,23 @@ impl<'w> WgpuCtx<'w> {
             usage: wgpu::BufferUsages::INDEX,
         });
 
-        let translation = [0.0, 0.0];
-        let uniform_content = &[
+        let rotation: [f32; 2] = [
+            ((DEFAULT_ROTATION / PI_IN_DEGREE) * f32::consts::PI).cos(),
+            ((DEFAULT_ROTATION / PI_IN_DEGREE) * f32::consts::PI).sin(),
+        ];
+        let uniform_content: &[f32; 12] = &[
             1.0,
             1.0,
             0.0,
             1.0,
             width as f32,
             height as f32,
-            translation[0],
-            translation[1],
+            DEFAULT_SCALING[0],
+            DEFAULT_SCALING[1],
+            rotation[0],
+            rotation[1],
+            DEFAULT_TRANSLATION[0],
+            DEFAULT_TRANSLATION[1],
         ];
 
         let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -125,7 +140,9 @@ impl<'w> WgpuCtx<'w> {
             index_buffer,
             uniform_buffer,
             uniform_bind_group,
-            translation,
+            scaling: DEFAULT_SCALING,
+            rotation_angle: DEFAULT_ROTATION,
+            translation: DEFAULT_TRANSLATION,
         }
     }
 
@@ -136,21 +153,6 @@ impl<'w> WgpuCtx<'w> {
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
         self.surface_config.width = size.width.max(1);
         self.surface_config.height = size.height.max(1);
-        self.translation = [self.translation[0] + 10.0, self.translation[1] + 10.0];
-        self.queue.write_buffer(
-            &self.uniform_buffer,
-            0,
-            bytemuck::cast_slice(&[
-                1.0,
-                1.0,
-                0.0,
-                1.0,
-                size.width.max(1) as f32,
-                size.height.max(1) as f32,
-                self.translation[0],
-                self.translation[1],
-            ]),
-        );
         self.surface.configure(&self.device, &self.surface_config);
     }
 
