@@ -21,7 +21,7 @@ pub struct WgpuCtx<'w> {
     index_buffer: wgpu::Buffer,
     uniform_buffer: wgpu::Buffer,
     uniform_bind_group: wgpu::BindGroup,
-
+    //dynamic info
     scaling: [f32; 2],
     rotation_angle: f32,
     translation: [f32; 2],

@@ -19,11 +19,13 @@ struct Inter{
 @vertex
 fn vs_main(in: Input)-> Inter {
     var inter: Inter;
+    // physical space transformation
     let scaled=in.position*uni.scaling;
     let rotated=vec2<f32>(
     scaled.x * uni.rotation.x - scaled.y * uni.rotation.y,
     scaled.x * uni.rotation.y + scaled.y * uni.rotation.x);
     let translated=rotated+uni.translation;
+    // view space transformation
     let zero_to_one= translated/uni.resolution;
     let zero_to_two=zero_to_one * 2.0;
     let flipped= zero_to_two - 1.0;
