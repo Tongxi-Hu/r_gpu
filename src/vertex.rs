@@ -1,7 +1,7 @@
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct Vertex {
-    position: [f32; 2],
+    position: [f32; 3],
 }
 
 unsafe impl bytemuck::Zeroable for Vertex {}
@@ -11,42 +11,42 @@ unsafe impl bytemuck::Pod for Vertex {}
 pub const VERTEX_LIST: &[Vertex] = &[
     // left
     Vertex {
-        position: [0.0, 0.0],
+        position: [0.0, 0.0, 0.0],
     },
     Vertex {
-        position: [30.0, 0.0],
+        position: [30.0, 0.0, 0.0],
     },
     Vertex {
-        position: [0.0, 150.0],
+        position: [0.0, 150.0, 0.0],
     },
     Vertex {
-        position: [30.0, 150.0],
+        position: [30.0, 150.0, 0.0],
     },
     //top
     Vertex {
-        position: [30.0, 0.0],
+        position: [30.0, 0.0, 0.0],
     },
     Vertex {
-        position: [100.0, 0.0],
+        position: [100.0, 0.0, 0.0],
     },
     Vertex {
-        position: [30.0, 30.0],
+        position: [30.0, 30.0, 0.0],
     },
     Vertex {
-        position: [100.0, 30.0],
+        position: [100.0, 30.0, 0.0],
     },
     //middle
     Vertex {
-        position: [30.0, 60.0],
+        position: [30.0, 60.0, 0.0],
     },
     Vertex {
-        position: [70.0, 60.0],
+        position: [70.0, 60.0, 0.0],
     },
     Vertex {
-        position: [30.0, 90.0],
+        position: [30.0, 90.0, 0.0],
     },
     Vertex {
-        position: [70.0, 90.0],
+        position: [70.0, 90.0, 0.0],
     },
 ];
 
@@ -63,7 +63,7 @@ pub fn create_vertex_buffer_layout() -> wgpu::VertexBufferLayout<'static> {
         attributes: &[wgpu::VertexAttribute {
             offset: 0,
             shader_location: 0,
-            format: wgpu::VertexFormat::Float32x2,
+            format: wgpu::VertexFormat::Float32x3,
         }],
     }
 }

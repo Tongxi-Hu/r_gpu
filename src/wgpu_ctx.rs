@@ -5,14 +5,13 @@ use winit::{dpi::PhysicalSize, window::Window};
 
 use crate::vertex::{INDEX_LIST, VERTEX_LIST, create_vertex_buffer_layout};
 
-const DEFAULT_SCALING: f32 = 2.0;
-const DEFAULT_ROTATION: f32 = 90.0;
-const DEFAULT_TRANSLATION: [f32; 2] = [400.0, 400.0];
+const DEFAULT_SCALING: f32 = 1.0;
+const DEFAULT_ROTATION: [f32; 3] = [0.0, 0.0, 0.0];
+const DEFAULT_TRANSLATION: [f32; 3] = [200.0, 200.0, 0.0];
 
 pub struct WgpuCtx<'w> {
     surface: wgpu::Surface<'w>,
     surface_config: wgpu::SurfaceConfiguration,
-    adapter: wgpu::Adapter,
     device: wgpu::Device,
     queue: wgpu::Queue,
     render_pipeline: wgpu::RenderPipeline,
@@ -22,8 +21,8 @@ pub struct WgpuCtx<'w> {
     uniform_bind_group: wgpu::BindGroup,
     //dynamic info
     scaling: f32,
-    rotation_angle: f32,
-    translation: [f32; 2],
+    rotation_angle: [f32; 3],
+    translation: [f32; 3],
 }
 
 impl<'w> WgpuCtx<'w> {
@@ -69,17 +68,23 @@ impl<'w> WgpuCtx<'w> {
             usage: wgpu::BufferUsages::INDEX,
         });
 
-        let uniform_content: &[f32; 12] = &[
+        let depth = 400.0;
+
+        let uniform_content: &[f32; 16] = &[
             1.0,
             1.0,
             0.0,
             1.0,
             width as f32,
             height as f32,
+            depth as f32,
             DEFAULT_SCALING,
-            DEFAULT_ROTATION,
+            DEFAULT_ROTATION[0],
+            DEFAULT_ROTATION[1],
+            DEFAULT_ROTATION[2],
             DEFAULT_TRANSLATION[0],
             DEFAULT_TRANSLATION[1],
+            DEFAULT_TRANSLATION[2],
             0.0,
             0.0,
         ];
@@ -127,7 +132,6 @@ impl<'w> WgpuCtx<'w> {
         Self {
             surface,
             surface_config,
-            adapter,
             device,
             queue,
             render_pipeline,
