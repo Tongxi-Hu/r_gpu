@@ -5,10 +5,9 @@ use winit::{dpi::PhysicalSize, window::Window};
 
 use crate::vertex::{INDEX_LIST, VERTEX_LIST, create_vertex_buffer_layout};
 
-const DEFAULT_SCALING: [f32; 2] = [1.0, 1.0];
+const DEFAULT_SCALING: f32 = 2.0;
 const DEFAULT_ROTATION: f32 = 90.0;
-const PI_IN_DEGREE: f32 = 180.0;
-const DEFAULT_TRANSLATION: [f32; 2] = [200.0, 200.0];
+const DEFAULT_TRANSLATION: [f32; 2] = [400.0, 400.0];
 
 pub struct WgpuCtx<'w> {
     surface: wgpu::Surface<'w>,
@@ -22,7 +21,7 @@ pub struct WgpuCtx<'w> {
     uniform_buffer: wgpu::Buffer,
     uniform_bind_group: wgpu::BindGroup,
     //dynamic info
-    scaling: [f32; 2],
+    scaling: f32,
     rotation_angle: f32,
     translation: [f32; 2],
 }
@@ -70,10 +69,6 @@ impl<'w> WgpuCtx<'w> {
             usage: wgpu::BufferUsages::INDEX,
         });
 
-        let rotation: [f32; 2] = [
-            ((DEFAULT_ROTATION / PI_IN_DEGREE) * f32::consts::PI).cos(),
-            ((DEFAULT_ROTATION / PI_IN_DEGREE) * f32::consts::PI).sin(),
-        ];
         let uniform_content: &[f32; 12] = &[
             1.0,
             1.0,
@@ -81,12 +76,12 @@ impl<'w> WgpuCtx<'w> {
             1.0,
             width as f32,
             height as f32,
-            DEFAULT_SCALING[0],
-            DEFAULT_SCALING[1],
-            rotation[0],
-            rotation[1],
+            DEFAULT_SCALING,
+            DEFAULT_ROTATION,
             DEFAULT_TRANSLATION[0],
             DEFAULT_TRANSLATION[1],
+            0.0,
+            0.0,
         ];
 
         let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
