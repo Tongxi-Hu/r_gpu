@@ -8,7 +8,7 @@ use crate::vertex::{INDEX_LIST, VERTEX_LIST, create_vertex_buffer_layout};
 const DEFAULT_COLOR: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 const DEFAULT_DEPTH: f32 = 400.0;
 const DEFAULT_SCALING: f32 = 2.0;
-const DEFAULT_ROTATION: [f32; 3] = [0.0, 0.0, 45.0];
+const DEFAULT_ROTATION: [f32; 3] = [45.0, 0.0, -45.0];
 const DEFAULT_TRANSLATION: [f32; 3] = [400.0, 400.0, 0.0];
 
 pub struct WgpuCtx<'w> {
@@ -184,7 +184,7 @@ impl<'w> WgpuCtx<'w> {
             });
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
             render_pass.set_bind_group(0, &self.uniform_bind_group, &[]);
             render_pass.draw_indexed(0..INDEX_LIST.len() as u32, 0, 0..1);
         }
