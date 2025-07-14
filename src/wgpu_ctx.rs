@@ -5,9 +5,11 @@ use winit::{dpi::PhysicalSize, window::Window};
 
 use crate::vertex::{INDEX_LIST, VERTEX_LIST, create_vertex_buffer_layout};
 
-const DEFAULT_SCALING: f32 = 1.0;
-const DEFAULT_ROTATION: [f32; 3] = [0.0, 0.0, 0.0];
-const DEFAULT_TRANSLATION: [f32; 3] = [200.0, 200.0, 0.0];
+const DEFAULT_COLOR: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
+const DEFAULT_DEPTH: f32 = 400.0;
+const DEFAULT_SCALING: f32 = 2.0;
+const DEFAULT_ROTATION: [f32; 3] = [0.0, 0.0, 45.0];
+const DEFAULT_TRANSLATION: [f32; 3] = [400.0, 400.0, 0.0];
 
 pub struct WgpuCtx<'w> {
     surface: wgpu::Surface<'w>,
@@ -68,25 +70,23 @@ impl<'w> WgpuCtx<'w> {
             usage: wgpu::BufferUsages::INDEX,
         });
 
-        let depth = 400.0;
-
         let uniform_content: &[f32; 16] = &[
-            1.0,
-            1.0,
-            0.0,
-            1.0,
+            DEFAULT_COLOR[0],
+            DEFAULT_COLOR[1],
+            DEFAULT_COLOR[2],
+            DEFAULT_COLOR[3],
             width as f32,
             height as f32,
-            depth as f32,
+            DEFAULT_DEPTH,
             DEFAULT_SCALING,
             DEFAULT_ROTATION[0],
             DEFAULT_ROTATION[1],
             DEFAULT_ROTATION[2],
+            0.0, // padding for vec3 in wgsl
             DEFAULT_TRANSLATION[0],
             DEFAULT_TRANSLATION[1],
             DEFAULT_TRANSLATION[2],
-            0.0,
-            0.0,
+            0.0, // padding for vec3 in wgsl
         ];
 
         let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {

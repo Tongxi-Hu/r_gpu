@@ -51,7 +51,7 @@ fn rotation_2d(rotation_deg: f32) -> mat3x3<f32> {
 
 // generate 2d translation matrix
 fn translation_2d(translation: vec2<f32>) -> mat3x3<f32> {
-    return mat3x3<f32>(vec3<f32>(1, 0, uni.translation.x), vec3<f32>(0, 1, uni.translation.y), vec3<f32>(0, 0, 1));
+    return mat3x3<f32>(vec3<f32>(1, 0, translation.x), vec3<f32>(0, 1, translation.y), vec3<f32>(0, 0, 1));
 }
 
 // generate 3d scaling matrix
@@ -62,7 +62,7 @@ fn scaling_3d(scaling: f32) -> mat4x4<f32> {
 // generate 3d rotation matrix around x axis
 fn rotation_3d_x(rotation_deg: f32) -> mat4x4<f32> {
     const PI: f32 = 3.141592653589793238462643;
-    return mat4x4<f32>(vec4<f32>(1, 0, 0, 0), vec4<f32>(cos(PI * rotation_deg / 180.0), - sin(PI * rotation_deg / 180.0), 0, 0), vec4<f32>(sin(PI * rotation_deg / 180.0), cos(PI * rotation_deg / 180.0), 0, 0), vec4<f32>(0, 0, 0, 1));
+    return mat4x4<f32>(vec4<f32>(1, 0, 0, 0), vec4<f32>(0, cos(PI * rotation_deg / 180.0), - sin(PI * rotation_deg / 180.0), 0,), vec4<f32>(0, sin(PI * rotation_deg / 180.0), cos(PI * rotation_deg / 180.0), 0), vec4<f32>(0, 0, 0, 1));
 }
 
 // generate 3d rotation matrix around y axis
@@ -79,9 +79,9 @@ fn rotation_3d_z(rotation_deg: f32) -> mat4x4<f32> {
 
 // generate 3d translation matrix
 fn translation_3d(translation: vec3<f32>) -> mat4x4<f32> {
-    return mat4x4<f32>(vec4<f32>(1, 0, 0, uni.translation.x), vec4<f32>(0, 1, 0, uni.translation.y), vec4<f32>(0, 0, 1, uni.translation.z), vec4<f32>(0, 0, 0, 1));
+    return mat4x4<f32>(vec4<f32>(1, 0, 0, translation.x), vec4<f32>(0, 1, 0, translation.y), vec4<f32>(0, 0, 1, translation.z), vec4<f32>(0, 0, 0, 1));
 }
 
 fn to_clip_space(resolution: vec3<f32>) -> mat4x4<f32> {
-    return mat4x4(vec4<f32>(2 / resolution.x, 0, 0, 0), vec4<f32>(0, - 2 / resolution.y, 0, 0), vec4<f32>(0, 0, 0.5 / resolution.z, 0), vec4<f32>(- 1, 1, 0.5, 1));
+    return mat4x4<f32>(vec4<f32>(2 / resolution.x, 0, 0, - 1), vec4<f32>(0, - 2 / resolution.y, 0, 1), vec4<f32>(0, 0, 0.5 / resolution.z, 0.5), vec4<f32>(0, 0, 0, 1));
 }
