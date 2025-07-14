@@ -8,7 +8,7 @@ use crate::vertex::{INDEX_LIST, VERTEX_LIST, create_vertex_buffer_layout};
 const DEFAULT_COLOR: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 const DEFAULT_DEPTH: f32 = 400.0;
 const DEFAULT_SCALING: f32 = 2.0;
-const DEFAULT_ROTATION: [f32; 3] = [45.0, 0.0, -45.0];
+const DEFAULT_ROTATION: [f32; 3] = [0.0, 45.0, -45.0];
 const DEFAULT_TRANSLATION: [f32; 3] = [400.0, 400.0, 0.0];
 
 pub struct WgpuCtx<'w> {
@@ -70,23 +70,27 @@ impl<'w> WgpuCtx<'w> {
             usage: wgpu::BufferUsages::INDEX,
         });
 
-        let uniform_content: &[f32; 16] = &[
+        let uniform_content: &[f32; 20] = &[
             DEFAULT_COLOR[0],
             DEFAULT_COLOR[1],
             DEFAULT_COLOR[2],
-            DEFAULT_COLOR[3],
+            DEFAULT_COLOR[3], // color
             width as f32,
             height as f32,
             DEFAULT_DEPTH,
+            0.0, // resolution
             DEFAULT_SCALING,
+            DEFAULT_SCALING,
+            DEFAULT_SCALING,
+            0.0, // scaling
             DEFAULT_ROTATION[0],
             DEFAULT_ROTATION[1],
             DEFAULT_ROTATION[2],
-            0.0, // padding for vec3 in wgsl
+            0.0, // rotation
             DEFAULT_TRANSLATION[0],
             DEFAULT_TRANSLATION[1],
             DEFAULT_TRANSLATION[2],
-            0.0, // padding for vec3 in wgsl
+            0.0, // translation
         ];
 
         let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {

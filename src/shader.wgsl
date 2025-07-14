@@ -1,9 +1,9 @@
 struct Uniform {
     color: vec4<f32>,
-    resolution: vec3<f32>,
-    scaling: f32,
-    rotation: vec3<f32>,
-    translation: vec3<f32>,
+    resolution: vec4<f32>,
+    scaling: vec4<f32>,
+    rotation: vec4<f32>,
+    translation: vec4<f32>,
 }
 
 struct Input {
@@ -55,8 +55,8 @@ fn translation_2d(translation: vec2<f32>) -> mat3x3<f32> {
 }
 
 // generate 3d scaling matrix
-fn scaling_3d(scaling: f32) -> mat4x4<f32> {
-    return mat4x4<f32>(vec4<f32>(scaling, 0, 0, 0), vec4<f32>(0, scaling, 0, 0), vec4<f32>(0, 0, scaling, 0), vec4<f32>(0, 0, 0, 1));
+fn scaling_3d(scaling: vec4<f32>) -> mat4x4<f32> {
+    return mat4x4<f32>(vec4<f32>(scaling.x, 0, 0, 0), vec4<f32>(0, scaling.y, 0, 0), vec4<f32>(0, 0, scaling.z, 0), vec4<f32>(0, 0, 0, 1));
 }
 
 // generate 3d rotation matrix around x axis
@@ -78,10 +78,10 @@ fn rotation_3d_z(rotation_deg: f32) -> mat4x4<f32> {
 }
 
 // generate 3d translation matrix
-fn translation_3d(translation: vec3<f32>) -> mat4x4<f32> {
+fn translation_3d(translation: vec4<f32>) -> mat4x4<f32> {
     return mat4x4<f32>(vec4<f32>(1, 0, 0, translation.x), vec4<f32>(0, 1, 0, translation.y), vec4<f32>(0, 0, 1, translation.z), vec4<f32>(0, 0, 0, 1));
 }
 
-fn to_clip_space(resolution: vec3<f32>) -> mat4x4<f32> {
+fn to_clip_space(resolution: vec4<f32>) -> mat4x4<f32> {
     return mat4x4<f32>(vec4<f32>(2 / resolution.x, 0, 0, - 1), vec4<f32>(0, - 2 / resolution.y, 0, 1), vec4<f32>(0, 0, 0.5 / resolution.z, 0.5), vec4<f32>(0, 0, 0, 1));
 }
