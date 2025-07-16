@@ -10,31 +10,31 @@ unsafe impl bytemuck::Zeroable for Vertex {}
 unsafe impl bytemuck::Pod for Vertex {}
 
 pub const VERTEX_LIST: &[Vertex] = &[
-    // left
+    // left (red)
     Vertex {
         position: [0.0, 0.0, 0.0],
         color: [1.0, 0.0, 0.0],
     },
     Vertex {
         position: [30.0, 0.0, 0.0],
-        color: [0.0, 1.0, 0.0],
+        color: [1.0, 0.0, 0.0],
     },
     Vertex {
         position: [0.0, 150.0, 0.0],
-        color: [0.0, 0.0, 1.0],
+        color: [1.0, 0.0, 0.0],
     },
     Vertex {
         position: [30.0, 150.0, 0.0],
         color: [1.0, 0.0, 0.0],
     },
-    //top
+    // top (green)
     Vertex {
         position: [30.0, 0.0, 0.0],
-        color: [0.0, 1.0, 0.0],
+        color: [1.0, 0.0, 0.0],
     },
     Vertex {
         position: [100.0, 0.0, 0.0],
-        color: [0.0, 0.0, 1.0],
+        color: [1.0, 0.0, 0.0],
     },
     Vertex {
         position: [30.0, 30.0, 0.0],
@@ -42,75 +42,75 @@ pub const VERTEX_LIST: &[Vertex] = &[
     },
     Vertex {
         position: [100.0, 30.0, 0.0],
-        color: [0.0, 1.0, 0.0],
+        color: [1.0, 0.0, 0.0],
     },
-    //middle
+    // middle (blue)
     Vertex {
         position: [30.0, 60.0, 0.0],
         color: [0.0, 0.0, 1.0],
     },
     Vertex {
         position: [70.0, 60.0, 0.0],
-        color: [1.0, 0.0, 0.0],
+        color: [0.0, 0.0, 1.0],
     },
     Vertex {
         position: [30.0, 90.0, 0.0],
-        color: [0.0, 1.0, 0.0],
+        color: [0.0, 0.0, 1.0],
     },
     Vertex {
         position: [70.0, 90.0, 0.0],
         color: [0.0, 0.0, 1.0],
     },
-    //left back
+    // left back (yellow)
     Vertex {
         position: [0.0, 0.0, 30.0],
-        color: [1.0, 0.0, 0.0],
+        color: [1.0, 1.0, 0.0],
     },
     Vertex {
         position: [30.0, 0.0, 30.0],
-        color: [0.0, 1.0, 0.0],
+        color: [1.0, 1.0, 0.0],
     },
     Vertex {
         position: [0.0, 150.0, 30.0],
-        color: [0.0, 0.0, 1.0],
+        color: [1.0, 1.0, 0.0],
     },
     Vertex {
         position: [30.0, 150.0, 30.0],
-        color: [1.0, 0.0, 0.0],
+        color: [1.0, 1.0, 0.0],
     },
-    //top back
+    // top back (cyan)
     Vertex {
         position: [30.0, 0.0, 30.0],
-        color: [0.0, 1.0, 0.0],
+        color: [0.0, 1.0, 1.0],
     },
     Vertex {
         position: [100.0, 0.0, 30.0],
-        color: [0.0, 0.0, 1.0],
+        color: [0.0, 1.0, 1.0],
     },
     Vertex {
         position: [30.0, 30.0, 30.0],
-        color: [1.0, 0.0, 0.0],
+        color: [0.0, 1.0, 1.0],
     },
     Vertex {
         position: [100.0, 30.0, 30.0],
-        color: [0.0, 1.0, 0.0],
+        color: [0.0, 1.0, 1.0],
     },
-    //middle back
+    // middle back (magenta)
     Vertex {
         position: [30.0, 60.0, 30.0],
-        color: [0.0, 0.0, 1.0],
+        color: [1.0, 0.0, 1.0],
     },
     Vertex {
         position: [70.0, 60.0, 30.0],
-        color: [1.0, 0.0, 0.0],
+        color: [1.0, 0.0, 1.0],
     },
     Vertex {
         position: [30.0, 90.0, 30.0],
-        color: [0.0, 1.0, 0.0],
+        color: [1.0, 0.0, 1.0],
     },
     Vertex {
         position: [70.0, 90.0, 30.0],
-        color: [0.0, 0.0, 1.0],
+        color: [1.0, 0.0, 1.0],
     },
 ];
 
