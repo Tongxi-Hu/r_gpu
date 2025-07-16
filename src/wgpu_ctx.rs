@@ -1,14 +1,13 @@
 use std::{f32, sync::Arc};
 
-use wgpu::util::DeviceExt;
+use wgpu::{Face, util::DeviceExt};
 use winit::{dpi::PhysicalSize, window::Window};
 
 use crate::vertex::{INDEX_LIST, VERTEX_LIST, create_vertex_buffer_layout};
 
-const DEFAULT_COLOR: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
-const DEFAULT_DEPTH: f32 = 400.0;
+const DEFAULT_DEPTH: f32 = 1200.0;
 const DEFAULT_SCALING: f32 = 2.0;
-const DEFAULT_ROTATION: [f32; 3] = [0.0, 45.0, -45.0];
+const DEFAULT_ROTATION: [f32; 3] = [-40.0, 20.0, 0.0];
 const DEFAULT_TRANSLATION: [f32; 3] = [400.0, 400.0, 0.0];
 
 pub struct WgpuCtx<'w> {
@@ -70,11 +69,7 @@ impl<'w> WgpuCtx<'w> {
             usage: wgpu::BufferUsages::INDEX,
         });
 
-        let uniform_content: &[f32; 20] = &[
-            DEFAULT_COLOR[0],
-            DEFAULT_COLOR[1],
-            DEFAULT_COLOR[2],
-            DEFAULT_COLOR[3], // color
+        let uniform_content: &[f32; 16] = &[
             width as f32,
             height as f32,
             DEFAULT_DEPTH,
@@ -171,6 +166,21 @@ impl<'w> WgpuCtx<'w> {
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
+        let depth_texture = &self.device.create_texture(&wgpu::TextureDescriptor {
+            label: None,
+            size: wgpu::Extent3d {
+                width: self.surface_config.width.max(1),
+                height: self.surface_config.height.max(1),
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Depth32Float,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            view_formats: &[wgpu::TextureFormat::Depth32Float],
+        });
+
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
@@ -178,11 +188,18 @@ impl<'w> WgpuCtx<'w> {
                     view: &texture_view,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
+                        load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
                         store: wgpu::StoreOp::Store,
                     },
                 })],
-                depth_stencil_attachment: None,
+                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                    view: &depth_texture.create_view(&wgpu::TextureViewDescriptor::default()),
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(1.0),
+                        store: wgpu::StoreOp::Store,
+                    }),
+                    stencil_ops: None,
+                }),
                 timestamp_writes: None,
                 occlusion_query_set: None,
             });
@@ -224,9 +241,16 @@ fn create_pipeline(
         }),
         primitive: wgpu::PrimitiveState {
             topology: wgpu::PrimitiveTopology::TriangleList,
+            cull_mode: Some(Face::Front),
             ..Default::default()
         },
-        depth_stencil: None,
+        depth_stencil: Some(wgpu::DepthStencilState {
+            depth_write_enabled: true,
+            depth_compare: wgpu::CompareFunction::Less,
+            format: wgpu::TextureFormat::Depth32Float,
+            bias: wgpu::DepthBiasState::default(),
+            stencil: wgpu::StencilState::default(),
+        }),
         multisample: wgpu::MultisampleState::default(),
         multiview: None,
         cache: None,

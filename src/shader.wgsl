@@ -1,5 +1,4 @@
 struct Uniform {
-    color: vec4<f32>,
     resolution: vec4<f32>,
     scaling: vec4<f32>,
     rotation: vec4<f32>,
@@ -7,11 +6,13 @@ struct Uniform {
 }
 
 struct Input {
-    @location(0) position: vec4<f32>,
+    @location(0) position: vec3<f32>,
+    @location(1) color: vec3<f32>,
 }
 
 struct Inter {
     @builtin(position) position: vec4<f32>,
+    @location(0) color: vec3<f32>
 }
 
 @group(0) @binding(0)
@@ -25,17 +26,18 @@ fn vs_main(in: Input) -> Inter {
     let rotation_y = rotation_3d_y(uni.rotation.y);
     let rotation_z = rotation_3d_z(uni.rotation.z);
     let translation = translation_3d(uni.translation);
-    let transformed = in.position * (scaling * rotation_x * rotation_y * rotation_z * translation);
+    let transformed = vec4<f32>(in.position, 1) * (scaling * rotation_x * rotation_y * rotation_z * translation);
     // view space transformation
     let clipped_space = transformed * to_clip_space(uni.resolution);
     var inter: Inter;
     inter.position = clipped_space;
+    inter.color = in.color;
     return inter;
 }
 
 @fragment
-fn fs_main() -> @location(0) vec4<f32> {
-    return uni.color;
+fn fs_main(inter: Inter) -> @location(0) vec4<f32> {
+    return vec4<f32>(inter.color, 1);
 }
 
 // generate 2d scaling matrix
