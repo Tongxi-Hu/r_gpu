@@ -7,7 +7,7 @@ use crate::vertex::{COLOR, INDEX, POSITION, create_vertex_buffer_layout, generat
 
 const DEFAULT_DEPTH: f32 = 1200.0;
 const DEFAULT_SCALING: f32 = 2.0;
-const DEFAULT_ROTATION: [f32; 3] = [-40.0, 20.0, 0.0];
+const DEFAULT_ROTATION: [f32; 3] = [-60.0, 20.0, 0.0];
 const DEFAULT_TRANSLATION: [f32; 3] = [400.0, 400.0, 0.0];
 
 pub struct WgpuCtx<'w> {

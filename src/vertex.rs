@@ -47,20 +47,20 @@ pub const POSITION: &[Position] = &[
 
 pub const COLOR: &[Color] = &[
     [1.0, 0.0, 0.0], // left column front
-    [0.0, 1.0, 0.0], // top rung front
-    [0.0, 0.0, 1.0], // middle rung front
-    [1.0, 1.0, 0.0], // left column back
-    [1.0, 0.0, 1.0], // top rung back
-    [0.0, 1.0, 1.0], // middle rung back
-    [1.0, 1.0, 1.0], // top
-    [1.0, 1.0, 1.0], // top rung right
-    [0.5, 0.0, 0.0], // top rung bottom
-    [0.0, 0.5, 0.0], // between top and middle rung
-    [0.0, 0.0, 0.5], // middle rung top
-    [0.5, 0.5, 0.0], // middle rung right
-    [0.5, 0.0, 0.5], // middle rung bottom
-    [0.0, 0.5, 0.5], // stem right
-    [0.5, 0.5, 0.5], // bottom
+    [1.0, 0.0, 0.0], // top rung front
+    [1.0, 0.0, 0.0], // middle rung front
+    [0.0, 1.0, 0.0], // left column back
+    [0.0, 1.0, 0.0], // top rung back
+    [0.0, 1.0, 0.0], // middle rung back
+    [0.0, 0.0, 1.0], // top
+    [1.0, 1.0, 0.0], // top rung right
+    [0.0, 0.0, 1.0], // top rung bottom
+    [0.0, 0.0, 1.0], // between top and middle rung
+    [0.0, 0.0, 1.0], // middle rung top
+    [1.0, 1.0, 0.0], // middle rung right
+    [0.0, 0.0, 1.0], // middle rung bottom
+    [1.0, 1.0, 0.0], // stem right
+    [0.0, 0.0, 1.0], // bottom
     [1.0, 1.0, 1.0], // left
 ];
 
