@@ -3,7 +3,7 @@ use std::{f32, sync::Arc};
 use wgpu::{Face, util::DeviceExt};
 use winit::{dpi::PhysicalSize, window::Window};
 
-use crate::vertex::{INDEX_LIST, VERTEX_LIST, create_vertex_buffer_layout};
+use crate::vertex::{COLOR, INDEX, POSITION, create_vertex_buffer_layout, generate_vertex};
 
 const DEFAULT_DEPTH: f32 = 1200.0;
 const DEFAULT_SCALING: f32 = 2.0;
@@ -17,7 +17,7 @@ pub struct WgpuCtx<'w> {
     queue: wgpu::Queue,
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
-    index_buffer: wgpu::Buffer,
+    //index_buffer: wgpu::Buffer,
     uniform_buffer: wgpu::Buffer,
     uniform_bind_group: wgpu::BindGroup,
     //dynamic info
@@ -59,15 +59,15 @@ impl<'w> WgpuCtx<'w> {
 
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: None,
-            contents: bytemuck::cast_slice(VERTEX_LIST),
+            contents: bytemuck::cast_slice(&generate_vertex(&POSITION, &COLOR, &INDEX)),
             usage: wgpu::BufferUsages::VERTEX,
         });
 
-        let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: None,
-            contents: bytemuck::cast_slice(INDEX_LIST),
-            usage: wgpu::BufferUsages::INDEX,
-        });
+        // let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        //     label: None,
+        //     contents: bytemuck::cast_slice(INDEX_LIST),
+        //     usage: wgpu::BufferUsages::INDEX,
+        // });
 
         let uniform_content: &[f32; 16] = &[
             width as f32,
@@ -135,7 +135,7 @@ impl<'w> WgpuCtx<'w> {
             queue,
             render_pipeline,
             vertex_buffer,
-            index_buffer,
+            //index_buffer,
             uniform_buffer,
             uniform_bind_group,
             scaling: DEFAULT_SCALING,
@@ -205,9 +205,10 @@ impl<'w> WgpuCtx<'w> {
             });
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+            //render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
             render_pass.set_bind_group(0, &self.uniform_bind_group, &[]);
-            render_pass.draw_indexed(0..INDEX_LIST.len() as u32, 0, 0..1);
+            //render_pass.draw_indexed(0..INDEX.len() as u32, 0, 0..1);
+            render_pass.draw(0..INDEX.len() as u32, 0..1);
         }
 
         self.queue.submit(Some(encoder.finish()));

@@ -1,120 +1,70 @@
+type Color = [f32; 3];
+type Position = [f32; 3];
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct Vertex {
-    position: [f32; 3],
-    color: [f32; 3],
+    position: Position,
+    color: Color,
 }
 
 unsafe impl bytemuck::Zeroable for Vertex {}
 
 unsafe impl bytemuck::Pod for Vertex {}
 
-pub const VERTEX_LIST: &[Vertex] = &[
-    // left (red)
-    Vertex {
-        position: [0.0, 0.0, 0.0],
-        color: [1.0, 0.0, 0.0],
-    },
-    Vertex {
-        position: [30.0, 0.0, 0.0],
-        color: [1.0, 0.0, 0.0],
-    },
-    Vertex {
-        position: [0.0, 150.0, 0.0],
-        color: [1.0, 0.0, 0.0],
-    },
-    Vertex {
-        position: [30.0, 150.0, 0.0],
-        color: [1.0, 0.0, 0.0],
-    },
-    // top (green)
-    Vertex {
-        position: [30.0, 0.0, 0.0],
-        color: [1.0, 0.0, 0.0],
-    },
-    Vertex {
-        position: [100.0, 0.0, 0.0],
-        color: [1.0, 0.0, 0.0],
-    },
-    Vertex {
-        position: [30.0, 30.0, 0.0],
-        color: [1.0, 0.0, 0.0],
-    },
-    Vertex {
-        position: [100.0, 30.0, 0.0],
-        color: [1.0, 0.0, 0.0],
-    },
-    // middle (blue)
-    Vertex {
-        position: [30.0, 60.0, 0.0],
-        color: [0.0, 0.0, 1.0],
-    },
-    Vertex {
-        position: [70.0, 60.0, 0.0],
-        color: [0.0, 0.0, 1.0],
-    },
-    Vertex {
-        position: [30.0, 90.0, 0.0],
-        color: [0.0, 0.0, 1.0],
-    },
-    Vertex {
-        position: [70.0, 90.0, 0.0],
-        color: [0.0, 0.0, 1.0],
-    },
-    // left back (yellow)
-    Vertex {
-        position: [0.0, 0.0, 30.0],
-        color: [1.0, 1.0, 0.0],
-    },
-    Vertex {
-        position: [30.0, 0.0, 30.0],
-        color: [1.0, 1.0, 0.0],
-    },
-    Vertex {
-        position: [0.0, 150.0, 30.0],
-        color: [1.0, 1.0, 0.0],
-    },
-    Vertex {
-        position: [30.0, 150.0, 30.0],
-        color: [1.0, 1.0, 0.0],
-    },
-    // top back (cyan)
-    Vertex {
-        position: [30.0, 0.0, 30.0],
-        color: [0.0, 1.0, 1.0],
-    },
-    Vertex {
-        position: [100.0, 0.0, 30.0],
-        color: [0.0, 1.0, 1.0],
-    },
-    Vertex {
-        position: [30.0, 30.0, 30.0],
-        color: [0.0, 1.0, 1.0],
-    },
-    Vertex {
-        position: [100.0, 30.0, 30.0],
-        color: [0.0, 1.0, 1.0],
-    },
-    // middle back (magenta)
-    Vertex {
-        position: [30.0, 60.0, 30.0],
-        color: [1.0, 0.0, 1.0],
-    },
-    Vertex {
-        position: [70.0, 60.0, 30.0],
-        color: [1.0, 0.0, 1.0],
-    },
-    Vertex {
-        position: [30.0, 90.0, 30.0],
-        color: [1.0, 0.0, 1.0],
-    },
-    Vertex {
-        position: [70.0, 90.0, 30.0],
-        color: [1.0, 0.0, 1.0],
-    },
+pub const POSITION: &[Position] = &[
+    // left column
+    [0.0, 0.0, 0.0],
+    [30.0, 0.0, 0.0],
+    [0.0, 150.0, 0.0],
+    [30.0, 150.0, 0.0],
+    // top rung
+    [30.0, 0.0, 0.0],
+    [100.0, 0.0, 0.0],
+    [30.0, 30.0, 0.0],
+    [100.0, 30.0, 0.0],
+    // middle
+    [30.0, 60.0, 0.0],
+    [70.0, 60.0, 0.0],
+    [30.0, 90.0, 0.0],
+    [70.0, 90.0, 0.0],
+    // left back
+    [0.0, 0.0, 30.0],
+    [30.0, 0.0, 30.0],
+    [0.0, 150.0, 30.0],
+    [30.0, 150.0, 30.0],
+    // top back
+    [30.0, 0.0, 30.0],
+    [100.0, 0.0, 30.0],
+    [30.0, 30.0, 30.0],
+    [100.0, 30.0, 30.0],
+    // middle back
+    [30.0, 60.0, 30.0],
+    [70.0, 60.0, 30.0],
+    [30.0, 90.0, 30.0],
+    [70.0, 90.0, 30.0],
 ];
 
-pub const INDEX_LIST: &[u32] = &[
+pub const COLOR: &[Color] = &[
+    [1.0, 0.0, 0.0], // left column front
+    [0.0, 1.0, 0.0], // top rung front
+    [0.0, 0.0, 1.0], // middle rung front
+    [1.0, 1.0, 0.0], // left column back
+    [1.0, 0.0, 1.0], // top rung back
+    [0.0, 1.0, 1.0], // middle rung back
+    [1.0, 1.0, 1.0], // top
+    [1.0, 1.0, 1.0], // top rung right
+    [0.5, 0.0, 0.0], // top rung bottom
+    [0.0, 0.5, 0.0], // between top and middle rung
+    [0.0, 0.0, 0.5], // middle rung top
+    [0.5, 0.5, 0.0], // middle rung right
+    [0.5, 0.0, 0.5], // middle rung bottom
+    [0.0, 0.5, 0.5], // stem right
+    [0.5, 0.5, 0.5], // bottom
+    [1.0, 1.0, 1.0], // left
+];
+
+pub const INDEX: &[u32] = &[
     // front
     0, 1, 2, 2, 1, 3, // left column
     4, 5, 6, 6, 5, 7, // top run
@@ -134,6 +84,17 @@ pub const INDEX_LIST: &[u32] = &[
     2, 3, 14, 14, 3, 15, // bottom
     0, 2, 12, 12, 2, 14, // left
 ];
+
+pub fn generate_vertex(position: &[Position], color: &[Color], index: &[u32]) -> Vec<Vertex> {
+    let mut vertex = vec![];
+    for (index, &v) in index.iter().enumerate() {
+        vertex.push(Vertex {
+            position: position[v as usize],
+            color: color[index / 6],
+        });
+    }
+    vertex
+}
 
 pub fn create_vertex_buffer_layout() -> wgpu::VertexBufferLayout<'static> {
     wgpu::VertexBufferLayout {
