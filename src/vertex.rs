@@ -55,7 +55,7 @@ pub const COLOR: &[Color] = &[
     [0.0, 0.0, 1.0], // top
     [1.0, 1.0, 0.0], // top rung right
     [0.0, 0.0, 1.0], // top rung bottom
-    [0.0, 0.0, 1.0], // between top and middle rung
+    [1.0, 1.0, 0.0], // between top and middle rung
     [0.0, 0.0, 1.0], // middle rung top
     [1.0, 1.0, 0.0], // middle rung right
     [0.0, 0.0, 1.0], // middle rung bottom

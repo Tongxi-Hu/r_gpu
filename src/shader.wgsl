@@ -1,5 +1,6 @@
 struct Uniform {
     resolution: vec4<f32>,
+    depth: vec2<f32>,
     scaling: vec4<f32>,
     rotation: vec4<f32>,
     translation: vec4<f32>,
@@ -28,7 +29,7 @@ fn vs_main(in: Input) -> Inter {
     let translation = translation_3d(uni.translation);
     let transformed = vec4<f32>(in.position, 1) * (scaling * rotation_x * rotation_y * rotation_z * translation);
     // view space transformation
-    let clipped_space = transformed * to_clip_space(uni.resolution);
+    let clipped_space = transformed * to_clip_space(uni.resolution, uni.depth);
     var inter: Inter;
     inter.position = clipped_space;
     inter.color = in.color;
@@ -84,6 +85,6 @@ fn translation_3d(translation: vec4<f32>) -> mat4x4<f32> {
     return mat4x4<f32>(vec4<f32>(1, 0, 0, translation.x), vec4<f32>(0, 1, 0, translation.y), vec4<f32>(0, 0, 1, translation.z), vec4<f32>(0, 0, 0, 1));
 }
 
-fn to_clip_space(resolution: vec4<f32>) -> mat4x4<f32> {
-    return mat4x4<f32>(vec4<f32>(2 / resolution.x, 0, 0, - 1), vec4<f32>(0, - 2 / resolution.y, 0, 1), vec4<f32>(0, 0, 0.5 / resolution.z, 0.5), vec4<f32>(0, 0, 0, 1));
+fn to_clip_space(resolution: vec4<f32>, depth: vec2<f32>) -> mat4x4<f32> {
+    return mat4x4<f32>(vec4<f32>(2 / (resolution[1] - resolution[0]), 0, 0, (resolution[0] + resolution[1]) / (resolution[0] - resolution[1])), vec4<f32>(0, 2 / (resolution[3] - resolution[2]), 0, (resolution[3] + resolution[2]) / (resolution[2] - resolution[3])), vec4<f32>(0, 0, 1 / (depth[0] - depth[1]), depth[0] / (depth[0] - depth[1])), vec4<f32>(0, 0, 0, 1));
 }

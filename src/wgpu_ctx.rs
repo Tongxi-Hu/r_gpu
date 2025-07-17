@@ -69,10 +69,14 @@ impl<'w> WgpuCtx<'w> {
         //     usage: wgpu::BufferUsages::INDEX,
         // });
 
-        let uniform_content: &[f32; 16] = &[
+        let uniform_content: &[f32; 20] = &[
+            0.0,
             width as f32,
             height as f32,
+            0.0,
             DEFAULT_DEPTH,
+            -DEFAULT_DEPTH,
+            0.0,
             0.0, // resolution
             DEFAULT_SCALING,
             DEFAULT_SCALING,
