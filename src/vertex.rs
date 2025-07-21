@@ -13,76 +13,32 @@ unsafe impl bytemuck::Zeroable for Vertex {}
 unsafe impl bytemuck::Pod for Vertex {}
 
 pub const POSITION: &[Position] = &[
-    // left column
-    [0.0, 0.0, 0.0],
-    [30.0, 0.0, 0.0],
-    [0.0, 150.0, 0.0],
-    [30.0, 150.0, 0.0],
-    // top rung
-    [30.0, 0.0, 0.0],
-    [100.0, 0.0, 0.0],
-    [30.0, 30.0, 0.0],
-    [100.0, 30.0, 0.0],
-    // middle
-    [30.0, 60.0, 0.0],
-    [70.0, 60.0, 0.0],
-    [30.0, 90.0, 0.0],
-    [70.0, 90.0, 0.0],
-    // left back
-    [0.0, 0.0, 30.0],
-    [30.0, 0.0, 30.0],
-    [0.0, 150.0, 30.0],
-    [30.0, 150.0, 30.0],
-    // top back
-    [30.0, 0.0, 30.0],
-    [100.0, 0.0, 30.0],
-    [30.0, 30.0, 30.0],
-    [100.0, 30.0, 30.0],
-    // middle back
-    [30.0, 60.0, 30.0],
-    [70.0, 60.0, 30.0],
-    [30.0, 90.0, 30.0],
-    [70.0, 90.0, 30.0],
+    [-100.0, 100.0, -100.0],  //0
+    [-100.0, -100.0, -100.0], //1
+    [100.0, 100.0, -100.0],   //2
+    [100.0, -100.0, -100.0],  //3
+    [100.0, 100.0, 100.0],    //4
+    [100.0, -100.0, 100.0],   //5
+    [-100.0, 100.0, 100.0],   //6
+    [-100.0, -100.0, 100.0],  //7
 ];
 
 pub const COLOR: &[Color] = &[
-    [1.0, 0.0, 0.0], // left column front
-    [1.0, 0.0, 0.0], // top rung front
-    [1.0, 0.0, 0.0], // middle rung front
-    [0.0, 1.0, 0.0], // left column back
-    [0.0, 1.0, 0.0], // top rung back
-    [0.0, 1.0, 0.0], // middle rung back
-    [0.0, 0.0, 1.0], // top
-    [1.0, 1.0, 0.0], // top rung right
-    [0.0, 0.0, 1.0], // top rung bottom
-    [1.0, 1.0, 0.0], // between top and middle rung
-    [0.0, 0.0, 1.0], // middle rung top
-    [1.0, 1.0, 0.0], // middle rung right
-    [0.0, 0.0, 1.0], // middle rung bottom
-    [1.0, 1.0, 0.0], // stem right
-    [0.0, 0.0, 1.0], // bottom
-    [1.0, 1.0, 1.0], // left
+    [1.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0],
+    [0.0, 0.0, 1.0],
+    [1.0, 1.0, 0.0],
+    [1.0, 0.0, 1.0],
+    [0.0, 1.0, 1.0],
 ];
 
 pub const INDEX: &[u32] = &[
-    // front
-    0, 1, 2, 2, 1, 3, // left column
-    4, 5, 6, 6, 5, 7, // top run
-    8, 9, 10, 10, 9, 11, // middle run
-    // back
-    12, 14, 13, 14, 15, 13, // left column back
-    16, 18, 17, 18, 19, 17, // top run back
-    20, 22, 21, 22, 23, 21, // middle run back
-    0, 12, 5, 12, 17, 5, // top
-    5, 17, 7, 17, 19, 7, // top rung right
-    6, 7, 18, 18, 7, 19, // top rung bottom
-    6, 18, 8, 18, 20, 8, // between top and middle rung
-    8, 20, 9, 20, 21, 9, // middle rung top
-    9, 21, 11, 21, 23, 11, // middle rung right
-    10, 11, 22, 22, 11, 23, // middle rung bottom
-    10, 22, 3, 22, 15, 3, // stem right
-    2, 3, 14, 14, 3, 15, // bottom
-    0, 2, 12, 12, 2, 14, // left
+    0, 1, 2, 2, 1, 3, // front
+    2, 3, 4, 4, 3, 5, // right
+    0, 2, 4, 0, 4, 6, // top
+    0, 7, 1, 0, 6, 7, // left
+    1, 7, 5, 1, 5, 3, // bottom
+    4, 5, 7, 4, 7, 6, //back
 ];
 
 pub fn generate_vertex(position: &[Position], color: &[Color], index: &[u32]) -> Vec<Vertex> {

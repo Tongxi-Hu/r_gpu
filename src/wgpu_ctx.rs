@@ -5,10 +5,8 @@ use winit::{dpi::PhysicalSize, window::Window};
 
 use crate::vertex::{COLOR, INDEX, POSITION, create_vertex_buffer_layout, generate_vertex};
 
-const DEFAULT_DEPTH: f32 = 1200.0;
-const DEFAULT_SCALING: f32 = 2.0;
-const DEFAULT_ROTATION: [f32; 3] = [-60.0, 20.0, 0.0];
-const DEFAULT_TRANSLATION: [f32; 3] = [400.0, 400.0, 0.0];
+const DEFAULT_ROTATION: [f32; 3] = [-20.0, 20.0, 0.0];
+const DEFAULT_POSITION: [f32; 3] = [0.0, 0.0, 400.0];
 
 pub struct WgpuCtx<'w> {
     surface: wgpu::Surface<'w>,
@@ -21,7 +19,6 @@ pub struct WgpuCtx<'w> {
     uniform_buffer: wgpu::Buffer,
     uniform_bind_group: wgpu::BindGroup,
     //dynamic info
-    scaling: f32,
     rotation_angle: [f32; 3],
     translation: [f32; 3],
 }
@@ -68,27 +65,18 @@ impl<'w> WgpuCtx<'w> {
         //     contents: bytemuck::cast_slice(INDEX_LIST),
         //     usage: wgpu::BufferUsages::INDEX,
         // });
-
-        let uniform_content: &[f32; 20] = &[
-            0.0,
+        let uniform_content: &[f32; 12] = &[
             width as f32,
             height as f32,
-            0.0,
-            DEFAULT_DEPTH,
-            -DEFAULT_DEPTH,
-            0.0,
-            0.0, // resolution
-            DEFAULT_SCALING,
-            DEFAULT_SCALING,
-            DEFAULT_SCALING,
-            0.0, // scaling
+            -1000.0, // eye
+            1000.0,  // far
             DEFAULT_ROTATION[0],
             DEFAULT_ROTATION[1],
             DEFAULT_ROTATION[2],
             0.0, // rotation
-            DEFAULT_TRANSLATION[0],
-            DEFAULT_TRANSLATION[1],
-            DEFAULT_TRANSLATION[2],
+            DEFAULT_POSITION[0],
+            DEFAULT_POSITION[1],
+            DEFAULT_POSITION[2],
             0.0, // translation
         ];
 
@@ -142,9 +130,8 @@ impl<'w> WgpuCtx<'w> {
             //index_buffer,
             uniform_buffer,
             uniform_bind_group,
-            scaling: DEFAULT_SCALING,
             rotation_angle: DEFAULT_ROTATION,
-            translation: DEFAULT_TRANSLATION,
+            translation: DEFAULT_POSITION,
         }
     }
 
@@ -246,7 +233,7 @@ fn create_pipeline(
         }),
         primitive: wgpu::PrimitiveState {
             topology: wgpu::PrimitiveTopology::TriangleList,
-            cull_mode: Some(Face::Front),
+            cull_mode: Some(Face::Back),
             ..Default::default()
         },
         depth_stencil: Some(wgpu::DepthStencilState {
