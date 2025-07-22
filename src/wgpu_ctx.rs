@@ -6,7 +6,9 @@ use winit::{dpi::PhysicalSize, window::Window};
 use crate::vertex::{COLOR, INDEX, POSITION, create_vertex_buffer_layout, generate_vertex};
 
 const DEFAULT_ROTATION: [f32; 3] = [-20.0, 20.0, 0.0];
-const DEFAULT_POSITION: [f32; 3] = [0.0, 0.0, 400.0];
+const DEFAULT_POSITION: [f32; 3] = [0.0, 0.0, 800.0];
+const DEFAULT_NEAR: f32 = 500.0;
+const DEFAULT_FAR: f32 = 2000.0;
 
 pub struct WgpuCtx<'w> {
     surface: wgpu::Surface<'w>,
@@ -20,7 +22,6 @@ pub struct WgpuCtx<'w> {
     uniform_bind_group: wgpu::BindGroup,
     //dynamic info
     rotation_angle: [f32; 3],
-    translation: [f32; 3],
 }
 
 impl<'w> WgpuCtx<'w> {
@@ -68,8 +69,8 @@ impl<'w> WgpuCtx<'w> {
         let uniform_content: &[f32; 12] = &[
             width as f32,
             height as f32,
-            -1000.0, // eye
-            1000.0,  // far
+            DEFAULT_NEAR, // near camera sits at the origin
+            DEFAULT_FAR,  // far
             DEFAULT_ROTATION[0],
             DEFAULT_ROTATION[1],
             DEFAULT_ROTATION[2],
@@ -131,7 +132,6 @@ impl<'w> WgpuCtx<'w> {
             uniform_buffer,
             uniform_bind_group,
             rotation_angle: DEFAULT_ROTATION,
-            translation: DEFAULT_POSITION,
         }
     }
 
@@ -143,6 +143,30 @@ impl<'w> WgpuCtx<'w> {
         self.surface_config.width = size.width.max(1);
         self.surface_config.height = size.height.max(1);
         self.surface.configure(&self.device, &self.surface_config);
+        self.rotation_angle = [
+            self.rotation_angle[0] + 10.0,
+            self.rotation_angle[1],
+            self.rotation_angle[2],
+        ];
+        self.queue.write_buffer(
+            &self.uniform_buffer,
+            0,
+            bytemuck::cast_slice(&[
+                self.surface_config.width as f32,
+                self.surface_config.height as f32,
+                500.0,  // near camera sits at the origin
+                2000.0, // far
+                self.rotation_angle[0],
+                self.rotation_angle[1],
+                self.rotation_angle[2],
+                0.0, // rotation
+                DEFAULT_POSITION[0],
+                DEFAULT_POSITION[1],
+                DEFAULT_POSITION[2],
+                0.0, // translation
+            ]),
+        );
+        self.draw();
     }
 
     pub fn draw(&mut self) {

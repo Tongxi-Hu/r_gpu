@@ -82,11 +82,11 @@ fn translation_3d(translation: vec4<f32>) -> mat4x4<f32> {
     return mat4x4<f32>(vec4<f32>(1, 0, 0, translation.x), vec4<f32>(0, 1, 0, translation.y), vec4<f32>(0, 0, 1, translation.z), vec4<f32>(0, 0, 0, 1));
 }
 
-// (width, height, eye, far)
+// (width, height, near, far)
 fn to_clip_space(view: vec4<f32>) -> mat4x4<f32> {
-    return mat4x4<f32>(vec4<f32>(2 / view[0], 0, 0, 0), //x
-    vec4<f32>(0, 2 / view[1], 0, 0), //y
-    vec4<f32>(0, 0, 1 / view[3], 0), //z
-    vec4<f32>(0, 0, 0, 1));
+    return mat4x4<f32>(vec4<f32>(2 * view[2] / view[0], 0, 0, 0), //x
+    vec4<f32>(0, 2 * view[2] / view[1], 0, 0), //y
+    vec4<f32>(0, 0, (view[2] + view[3]) / view[3], - view[2]), //z
+    vec4<f32>(0, 0, 1, 0));
     //w
 }
