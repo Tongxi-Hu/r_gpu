@@ -6,9 +6,9 @@ use winit::{dpi::PhysicalSize, window::Window};
 use crate::vertex::{COLOR, INDEX, POSITION, create_vertex_buffer_layout, generate_vertex};
 
 const DEFAULT_ROTATION: [f32; 3] = [-20.0, 20.0, 0.0];
-const DEFAULT_POSITION: [f32; 3] = [0.0, 0.0, 800.0];
-const DEFAULT_NEAR: f32 = 500.0;
-const DEFAULT_FAR: f32 = 2000.0;
+const DEFAULT_POSITION: [f32; 3] = [0.0, 0.0, -800.0];
+const DEFAULT_NEAR: f32 = -500.0;
+const DEFAULT_FAR: f32 = -2000.0;
 
 pub struct WgpuCtx<'w> {
     surface: wgpu::Surface<'w>,
@@ -17,7 +17,6 @@ pub struct WgpuCtx<'w> {
     queue: wgpu::Queue,
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
-    //index_buffer: wgpu::Buffer,
     uniform_buffer: wgpu::Buffer,
     uniform_bind_group: wgpu::BindGroup,
     //dynamic info
@@ -166,7 +165,6 @@ impl<'w> WgpuCtx<'w> {
                 0.0, // translation
             ]),
         );
-        self.draw();
     }
 
     pub fn draw(&mut self) {
@@ -220,9 +218,7 @@ impl<'w> WgpuCtx<'w> {
             });
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            //render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
             render_pass.set_bind_group(0, &self.uniform_bind_group, &[]);
-            //render_pass.draw_indexed(0..INDEX.len() as u32, 0, 0..1);
             render_pass.draw(0..INDEX.len() as u32, 0..1);
         }
 
