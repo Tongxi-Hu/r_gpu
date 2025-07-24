@@ -5,9 +5,9 @@ use winit::{dpi::PhysicalSize, window::Window};
 
 use crate::vertex::{COLOR, INDEX, POSITION, create_vertex_buffer_layout, generate_vertex};
 
-const DEFAULT_ROTATION: [f32; 3] = [-20.0, 20.0, 0.0];
-const DEFAULT_POSITION: [f32; 3] = [0.0, 0.0, -800.0];
-const DEFAULT_NEAR: f32 = -500.0;
+const DEFAULT_ROTATION: [f32; 3] = [0.0, 45.0, 0.0];
+const DEFAULT_POSITION: [f32; 3] = [0.0, 0.0, -300.0];
+const DEFAULT_NEAR: f32 = -100.0;
 const DEFAULT_FAR: f32 = -2000.0;
 
 pub struct WgpuCtx<'w> {
@@ -17,10 +17,7 @@ pub struct WgpuCtx<'w> {
     queue: wgpu::Queue,
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
-    uniform_buffer: wgpu::Buffer,
     uniform_bind_group: wgpu::BindGroup,
-    //dynamic info
-    rotation_angle: [f32; 3],
 }
 
 impl<'w> WgpuCtx<'w> {
@@ -60,15 +57,10 @@ impl<'w> WgpuCtx<'w> {
             usage: wgpu::BufferUsages::VERTEX,
         });
 
-        // let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        //     label: None,
-        //     contents: bytemuck::cast_slice(INDEX_LIST),
-        //     usage: wgpu::BufferUsages::INDEX,
-        // });
         let uniform_content: &[f32; 12] = &[
             width as f32,
             height as f32,
-            DEFAULT_NEAR, // near camera sits at the origin
+            DEFAULT_NEAR, // near
             DEFAULT_FAR,  // far
             DEFAULT_ROTATION[0],
             DEFAULT_ROTATION[1],
@@ -127,10 +119,7 @@ impl<'w> WgpuCtx<'w> {
             queue,
             render_pipeline,
             vertex_buffer,
-            //index_buffer,
-            uniform_buffer,
             uniform_bind_group,
-            rotation_angle: DEFAULT_ROTATION,
         }
     }
 
@@ -142,29 +131,6 @@ impl<'w> WgpuCtx<'w> {
         self.surface_config.width = size.width.max(1);
         self.surface_config.height = size.height.max(1);
         self.surface.configure(&self.device, &self.surface_config);
-        self.rotation_angle = [
-            self.rotation_angle[0] + 10.0,
-            self.rotation_angle[1],
-            self.rotation_angle[2],
-        ];
-        self.queue.write_buffer(
-            &self.uniform_buffer,
-            0,
-            bytemuck::cast_slice(&[
-                self.surface_config.width as f32,
-                self.surface_config.height as f32,
-                500.0,  // near camera sits at the origin
-                2000.0, // far
-                self.rotation_angle[0],
-                self.rotation_angle[1],
-                self.rotation_angle[2],
-                0.0, // rotation
-                DEFAULT_POSITION[0],
-                DEFAULT_POSITION[1],
-                DEFAULT_POSITION[2],
-                0.0, // translation
-            ]),
-        );
     }
 
     pub fn draw(&mut self) {
