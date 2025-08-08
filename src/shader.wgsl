@@ -17,6 +17,8 @@ struct Inter {
 @group(0) @binding(0)
 var<uniform> uni: Uniform;
 
+const PI: f32 = 3.141592653589793238462643;
+
 @vertex
 fn vs_main(in: Input) -> Inter {
     // physical space transformation 3*3 mat
@@ -45,7 +47,6 @@ fn scaling_2d(scaling: f32) -> mat3x3<f32> {
 
 // generate 2d rotation matrix
 fn rotation_2d(rotation_deg: f32) -> mat3x3<f32> {
-    const PI: f32 = 3.141592653589793238462643;
     return mat3x3<f32>(vec3<f32>(cos(PI * rotation_deg / 180.0), - sin(PI * rotation_deg / 180.0), 0), vec3<f32>(sin(PI * rotation_deg / 180.0), cos(PI * rotation_deg / 180.0), 0), vec3<f32>(0, 0, 1));
 }
 
@@ -61,19 +62,16 @@ fn scaling_3d(scaling: vec4<f32>) -> mat4x4<f32> {
 
 // generate 3d rotation matrix around x axis
 fn rotation_3d_x(rotation_deg: f32) -> mat4x4<f32> {
-    const PI: f32 = 3.141592653589793238462643;
     return mat4x4<f32>(vec4<f32>(1, 0, 0, 0), vec4<f32>(0, cos(PI * rotation_deg / 180.0), - sin(PI * rotation_deg / 180.0), 0,), vec4<f32>(0, sin(PI * rotation_deg / 180.0), cos(PI * rotation_deg / 180.0), 0), vec4<f32>(0, 0, 0, 1));
 }
 
 // generate 3d rotation matrix around y axis
 fn rotation_3d_y(rotation_deg: f32) -> mat4x4<f32> {
-    const PI: f32 = 3.141592653589793238462643;
     return mat4x4<f32>(vec4<f32>(cos(PI * rotation_deg / 180.0), 0, sin(PI * rotation_deg / 180.0), 0), vec4<f32>(0, 1, 0, 0), vec4<f32>(- sin(PI * rotation_deg / 180.0), 0, cos(PI * rotation_deg / 180.0), 0), vec4<f32>(0, 0, 0, 1));
 }
 
 // generate 3d rotation matrix around z axis
 fn rotation_3d_z(rotation_deg: f32) -> mat4x4<f32> {
-    const PI: f32 = 3.141592653589793238462643;
     return mat4x4<f32>(vec4<f32>(cos(PI * rotation_deg / 180.0), - sin(PI * rotation_deg / 180.0), 0, 0), vec4<f32>(sin(PI * rotation_deg / 180.0), cos(PI * rotation_deg / 180.0), 0, 0), vec4<f32>(0, 0, 1, 0), vec4<f32>(0, 0, 0, 1));
 }
 
