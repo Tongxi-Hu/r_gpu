@@ -6,11 +6,9 @@ use winit::{dpi::PhysicalSize, window::Window};
 use crate::vertex::{COLOR, INDEX, POSITION, create_vertex_buffer_layout, generate_vertex};
 
 const DEFAULT_ROTATION: [f32; 3] = [0.0, 0.0, 0.0];
-const DEFAULT_POSITION: [f32; 3] = [0.0, 0.0, 0.0];
-// const DEFAULT_NEAR: f32 = -100.0;
-// const DEFAULT_FAR: f32 = -2000.0;
-const DEFAULT_NEAR: f32 = 500.0;
-const DEFAULT_FAR: f32 = 2000.0;
+const DEFAULT_POSITION: [f32; 3] = [0.0, 0.0, -800.0];
+const DEFAULT_NEAR: f32 = -500.0;
+const DEFAULT_FAR: f32 = -2000.0;
 
 pub struct WgpuCtx<'w> {
     surface: wgpu::Surface<'w>,
