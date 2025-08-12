@@ -32,11 +32,12 @@ fn vs_main(in: Input) -> Inter {
 
     // view space transformation
     let clipped_space = transformed * to_clip_space(uni.view);
-    // lighting
+    // parallel light
     let surface_norm = vec4<f32>(in.norm, 1) * (rotation_x * rotation_y * rotation_z);
-    let normalized_light = - normalize(uni.parallel_light);
-    let color = vec4<f32>(in.color, 0);
-    
+    let normalized_light = - normalize(uni.parallel_light.xyz);
+    let light = dot(surface_norm.xyz, normalized_light);
+    let color = vec4<f32>(in.color * light, 1);
+
     var inter: Inter;
     inter.position = clipped_space;
     inter.color = color;
