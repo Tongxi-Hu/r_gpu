@@ -3,10 +3,16 @@ use std::{f32, sync::Arc};
 use wgpu::{Face, util::DeviceExt};
 use winit::{dpi::PhysicalSize, window::Window};
 
-use crate::vertex::{COLOR, INDEX, POSITION, create_vertex_buffer_layout, generate_vertex};
+use crate::vertex::{COLOR, INDEX, NORMAL, POSITION, create_vertex_buffer_layout, generate_vertex};
 
-const DEFAULT_ROTATION: [f32; 3] = [0.0, 0.0, 0.0];
+// object info
+const DEFAULT_ROTATION: [f32; 3] = [45.0, 20.0, 0.0];
 const DEFAULT_POSITION: [f32; 3] = [0.0, 0.0, -800.0];
+
+// light info
+const DEFAULT_PARALLEL_LIGHT: [f32; 3] = [-1.0, -1.0, -1.0];
+
+// perspective info
 const DEFAULT_NEAR: f32 = -500.0;
 const DEFAULT_FAR: f32 = -2000.0;
 
@@ -53,15 +59,19 @@ impl<'w> WgpuCtx<'w> {
 
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: None,
-            contents: bytemuck::cast_slice(&generate_vertex(&POSITION, &COLOR, &INDEX)),
+            contents: bytemuck::cast_slice(&generate_vertex(&POSITION, &COLOR, &NORMAL, &INDEX)),
             usage: wgpu::BufferUsages::VERTEX,
         });
 
-        let uniform_content: &[f32; 12] = &[
+        let uniform_content: &[f32; 16] = &[
             width as f32,
             height as f32,
             DEFAULT_NEAR, // near
             DEFAULT_FAR,  // far
+            DEFAULT_PARALLEL_LIGHT[0],
+            DEFAULT_PARALLEL_LIGHT[1],
+            DEFAULT_PARALLEL_LIGHT[2],
+            0.0,
             DEFAULT_ROTATION[0],
             DEFAULT_ROTATION[1],
             DEFAULT_ROTATION[2],
