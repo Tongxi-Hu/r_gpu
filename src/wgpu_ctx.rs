@@ -6,8 +6,8 @@ use winit::{dpi::PhysicalSize, window::Window};
 use crate::vertex::{COLOR, INDEX, NORMAL, POSITION, create_vertex_buffer_layout, generate_vertex};
 
 // object info
-const DEFAULT_ROTATION: [f32; 3] = [20.0, 20.0, 0.0];
-const DEFAULT_POSITION: [f32; 3] = [0., 0.0, -900.0];
+const DEFAULT_ROTATION: [f32; 3] = [45.0, 45.0, 0.0];
+const DEFAULT_POSITION: [f32; 3] = [0., 0.0, -1300.0];
 
 // light position
 const DEFAULT_LIGHT_POSITION: [f32; 3] = [0.0, 0.0, 0.0];
@@ -15,8 +15,8 @@ const DEFAULT_LIGHT_POSITION: [f32; 3] = [0.0, 0.0, 0.0];
 const DEFAULT_EYE_POSITION: [f32; 3] = [0.0, 0.0, 0.0];
 
 // perspective info
-const DEFAULT_NEAR: f32 = -500.0;
-const DEFAULT_FAR: f32 = -2000.0;
+const DEFAULT_NEAR: f32 = -1000.0;
+const DEFAULT_FAR: f32 = -20000.0;
 
 pub struct WgpuCtx<'w> {
     surface: wgpu::Surface<'w>,
