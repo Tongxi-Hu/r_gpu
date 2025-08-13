@@ -6,8 +6,8 @@ use winit::{dpi::PhysicalSize, window::Window};
 use crate::vertex::{COLOR, INDEX, NORMAL, POSITION, create_vertex_buffer_layout, generate_vertex};
 
 // object info
-const DEFAULT_ROTATION: [f32; 3] = [45.0, 45.0, 0.0];
-const DEFAULT_POSITION: [f32; 3] = [0., 0.0, -800.0];
+const DEFAULT_ROTATION: [f32; 3] = [20.0, 20.0, 0.0];
+const DEFAULT_POSITION: [f32; 3] = [0., 0.0, -900.0];
 
 // light position
 const DEFAULT_LIGHT_POSITION: [f32; 3] = [0.0, 0.0, 0.0];
@@ -183,7 +183,7 @@ impl<'w> WgpuCtx<'w> {
                     view: &texture_view,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
+                        load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
                         store: wgpu::StoreOp::Store,
                     },
                 })],

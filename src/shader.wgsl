@@ -25,7 +25,7 @@ var<uniform> uni: Uniform;
 
 const PI: f32 = 3.141592653589793238462643;
 
-const SHININESS: f32= 2500.0;
+const SHININESS: f32= 512.0;
 
 @vertex
 fn vs_main(in: Input) -> Inter {
@@ -48,8 +48,8 @@ fn vs_main(in: Input) -> Inter {
 
 @fragment
 fn fs_main(inter: Inter) -> @location(0) vec4<f32> {
-    //let color = lighting(inter.color, inter.surface_vector, inter.surface_light_vector, inter.surface_eye_vector);
-    return  inter.color;
+    return lighting(inter.color, inter.surface_vector, inter.surface_light_vector, inter.surface_eye_vector);
+    //return  inter.color;
 }
 
 // generate 2d scaling matrix
