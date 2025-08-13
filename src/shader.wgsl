@@ -34,13 +34,9 @@ fn vs_main(in: Input) -> Inter {
     let clipped_space = transformed * to_clip_space(uni.view);
     // parallel light
     let surface_norm = vec4<f32>(in.norm, 1) * (rotation_x * rotation_y * rotation_z);
-    let normalized_light = - normalize(uni.parallel_light.xyz);
-    let light = dot(surface_norm.xyz, normalized_light);
-    let color = vec4<f32>(in.color * light, 1);
-
     var inter: Inter;
     inter.position = clipped_space;
-    inter.color = color;
+    inter.color = parallel_lighting(vec4<f32>(in.color,1),surface_norm,uni.parallel_light);
     return inter;
 }
 
@@ -90,11 +86,19 @@ fn translation_3d(translation: vec4<f32>) -> mat4x4<f32> {
 }
 
 // (width, height, near, far)
-fn to_clip_space(view: vec4<f32>) -> mat4x4<f32> {
+fn to_clip_space(view: vec4<f32>) -> mat4x4<f32> {   
     return mat4x4<f32>(//
     vec4<f32>(2 * (- view[2]) / view[0], 0, 0, 0), // x
     vec4<f32>(0, 2 * (- view[2]) / view[1], 0, 0), // y
     vec4<f32>(0, 0, (- view[3]) / (view[3] - view[2]), view[2] * view[3] / (view[3] - view[2])), // z
     vec4<f32>(0, 0, - 1, 0));
     // w
+}
+
+fn parallel_lighting(color:vec4<f32>,norm:vec4<f32>,light_norm:vec4<f32>)->vec4<f32>{
+    let reversed_normalized_light_norm=-normalize(light_norm.xyz);
+    let normalized_norm=normalize(norm.xyz);
+    let light = dot(normalized_norm, reversed_normalized_light_norm);
+    let color_with_light = vec4<f32>(color.xyz * light,color.w);
+    return color_with_light;
 }
