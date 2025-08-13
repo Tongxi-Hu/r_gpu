@@ -6,11 +6,13 @@ use winit::{dpi::PhysicalSize, window::Window};
 use crate::vertex::{COLOR, INDEX, NORMAL, POSITION, create_vertex_buffer_layout, generate_vertex};
 
 // object info
-const DEFAULT_ROTATION: [f32; 3] = [0.0, 70.0, 0.0];
-const DEFAULT_POSITION: [f32; 3] = [0.0, 0.0, -800.0];
+const DEFAULT_ROTATION: [f32; 3] = [45.0, 45.0, 0.0];
+const DEFAULT_POSITION: [f32; 3] = [0., 0.0, -800.0];
 
-// light info
-const DEFAULT_PARALLEL_LIGHT: [f32; 3] = [-1.0, -1.0, -1.0];
+// light position
+const DEFAULT_LIGHT_POSITION: [f32; 3] = [0.0, 0.0, 0.0];
+// eye position
+const DEFAULT_EYE_POSITION: [f32; 3] = [0.0, 0.0, 0.0];
 
 // perspective info
 const DEFAULT_NEAR: f32 = -500.0;
@@ -63,15 +65,19 @@ impl<'w> WgpuCtx<'w> {
             usage: wgpu::BufferUsages::VERTEX,
         });
 
-        let uniform_content: &[f32; 16] = &[
+        let uniform_content: &[f32; 20] = &[
             width as f32,
             height as f32,
             DEFAULT_NEAR, // near
             DEFAULT_FAR,  // far
-            DEFAULT_PARALLEL_LIGHT[0],
-            DEFAULT_PARALLEL_LIGHT[1],
-            DEFAULT_PARALLEL_LIGHT[2],
+            DEFAULT_LIGHT_POSITION[0],
+            DEFAULT_LIGHT_POSITION[1],
+            DEFAULT_LIGHT_POSITION[2],
             0.0, // parallel light
+            DEFAULT_EYE_POSITION[0],
+            DEFAULT_EYE_POSITION[1],
+            DEFAULT_EYE_POSITION[2],
+            0.0,
             DEFAULT_ROTATION[0],
             DEFAULT_ROTATION[1],
             DEFAULT_ROTATION[2],

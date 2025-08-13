@@ -1,6 +1,7 @@
 struct Uniform {
     view: vec4<f32>,
-    parallel_light: vec4<f32>,
+    light_position: vec4<f32>,
+    eye_position:vec4<f32>,
     rotation: vec4<f32>,
     translation: vec4<f32>,
 }
@@ -13,13 +14,18 @@ struct Input {
 
 struct Inter {
     @builtin(position) position: vec4<f32>,
-    @location(0) color: vec4<f32>
+    @location(0) color: vec4<f32>,
+    @location(1) surface_vector: vec4<f32>,
+    @location(2) surface_light_vector: vec4<f32>,
+    @location(3) surface_eye_vector: vec4<f32>,
 }
 
 @group(0) @binding(0)
 var<uniform> uni: Uniform;
 
 const PI: f32 = 3.141592653589793238462643;
+
+const SHININESS: f32= 2500.0;
 
 @vertex
 fn vs_main(in: Input) -> Inter {
@@ -30,19 +36,20 @@ fn vs_main(in: Input) -> Inter {
     let translation = translation_3d(uni.translation);
     let transformed = vec4<f32>(in.position, 1) * (rotation_x * rotation_y * rotation_z * translation);
 
-    // view space transformation
-    let clipped_space = transformed * to_clip_space(uni.view);
-    // parallel light
-    let surface_norm = vec4<f32>(in.norm, 1) * (rotation_x * rotation_y * rotation_z);
+
     var inter: Inter;
-    inter.position = clipped_space;
-    inter.color = parallel_lighting(vec4<f32>(in.color,1),surface_norm,uni.parallel_light);
+    inter.position = transformed * to_clip_space(uni.view);
+    inter.color = vec4<f32>(in.color,1);
+    inter.surface_vector = vec4<f32>(in.norm, 1) * (rotation_x * rotation_y * rotation_z);
+    inter.surface_light_vector = uni.light_position - transformed;
+    inter.surface_eye_vector =  uni.eye_position - transformed;
     return inter;
 }
 
 @fragment
 fn fs_main(inter: Inter) -> @location(0) vec4<f32> {
-    return inter.color;
+    //let color = lighting(inter.color, inter.surface_vector, inter.surface_light_vector, inter.surface_eye_vector);
+    return  inter.color;
 }
 
 // generate 2d scaling matrix
@@ -95,10 +102,14 @@ fn to_clip_space(view: vec4<f32>) -> mat4x4<f32> {
     // w
 }
 
-fn parallel_lighting(color:vec4<f32>,norm:vec4<f32>,light_norm:vec4<f32>)->vec4<f32>{
-    let reversed_normalized_light_norm=-normalize(light_norm.xyz);
-    let normalized_norm=normalize(norm.xyz);
-    let light = dot(normalized_norm, reversed_normalized_light_norm);
-    let color_with_light = vec4<f32>(color.xyz * light,color.w);
+fn lighting(color:vec4<f32>,surface_vector:vec4<f32>,surface_light_vector:vec4<f32>,surface_eye_vector:vec4<f32>)->vec4<f32>{
+    let surface_light_norm = normalize(surface_light_vector.xyz);
+    let surface_norm = normalize(surface_vector.xyz);
+    let surface_eye_norm = normalize(surface_eye_vector.xyz);
+    let half_norm = normalize(surface_eye_norm + surface_light_norm);
+    let light = dot(surface_norm, surface_light_norm);
+    var specular = dot(surface_norm, half_norm);
+    specular = select(0.0, pow(specular, SHININESS), specular > 0.0); 
+    let color_with_light = vec4<f32>(color.xyz * light + specular, color.w);
     return color_with_light;
 }
