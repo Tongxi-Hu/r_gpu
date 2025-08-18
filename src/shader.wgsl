@@ -2,6 +2,9 @@ struct Uniform {
     view: vec4<f32>,
     light_position: vec4<f32>,
     eye_position: vec4<f32>,
+}
+
+struct Transform {
     rotation: vec4<f32>,
     translation: vec4<f32>,
 }
@@ -23,6 +26,9 @@ struct Inter {
 @group(0) @binding(0)
 var<uniform> uni: Uniform;
 
+@group(0) @binding(1)
+var<uniform> tran: Transform;
+
 const PI: f32 = 3.141592653589793238462643;
 
 const SHININESS: f32= 512.0;
@@ -30,10 +36,10 @@ const SHININESS: f32= 512.0;
 @vertex
 fn vs_main(in: Input) -> Inter {
     // physical space transformation 3*3 mat
-    let rotation_x = rotation_3d_x(uni.rotation.x);
-    let rotation_y = rotation_3d_y(uni.rotation.y);
-    let rotation_z = rotation_3d_z(uni.rotation.z);
-    let translation = translation_3d(uni.translation);
+    let rotation_x = rotation_3d_x(tran.rotation.x);
+    let rotation_y = rotation_3d_y(tran.rotation.y);
+    let rotation_z = rotation_3d_z(tran.rotation.z);
+    let translation = translation_3d(tran.translation);
     let transformed = vec4<f32>(in.position.xyz, 1.0) * (rotation_x * rotation_y * rotation_z * translation);
 
 

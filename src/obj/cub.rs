@@ -1,6 +1,6 @@
-type Color = [f32; 3];
-type Position = [f32; 3];
-type Normal = [f32; 3];
+use wgpu::util::DeviceExt;
+
+use crate::common::{Color, Normal, Position, Rotation};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -52,6 +52,10 @@ pub const INDEX: &[u32] = &[
     4, 5, 7, 4, 7, 6, //back
 ];
 
+// position info
+pub const DEFAULT_ROTATION: Rotation = [45.0, 45.0, 0.0];
+pub const DEFAULT_POSITION: Position = [0., 0.0, -1300.0];
+
 pub fn generate_vertex(
     position: &[Position],
     color: &[Color],
@@ -91,4 +95,27 @@ pub fn create_vertex_buffer_layout() -> wgpu::VertexBufferLayout<'static> {
             },
         ],
     }
+}
+
+pub fn generate_position_buffer(
+    rotation: Rotation,
+    position: Position,
+    device: &wgpu::Device,
+) -> wgpu::Buffer {
+    let data: [f32; 8] = [
+        rotation[0],
+        rotation[1],
+        rotation[2],
+        0.0,
+        position[0],
+        position[1],
+        position[2],
+        0.0,
+    ];
+
+    device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        label: None,
+        contents: bytemuck::cast_slice(&data),
+        usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+    })
 }

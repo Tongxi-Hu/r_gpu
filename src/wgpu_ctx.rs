@@ -3,20 +3,13 @@ use std::{f32, sync::Arc};
 use wgpu::{Face, FeaturesWGPU, FeaturesWebGPU, util::DeviceExt};
 use winit::{dpi::PhysicalSize, window::Window};
 
-use crate::vertex::{COLOR, INDEX, NORMAL, POSITION, create_vertex_buffer_layout, generate_vertex};
-
-// object info
-const DEFAULT_ROTATION: [f32; 3] = [45.0, 45.0, 0.0];
-const DEFAULT_POSITION: [f32; 3] = [0., 0.0, -1300.0];
-
-// light position
-const DEFAULT_LIGHT_POSITION: [f32; 3] = [0.0, 0.0, 0.0];
-// eye position
-const DEFAULT_EYE_POSITION: [f32; 3] = [0.0, 0.0, 0.0];
-
-// perspective info
-const DEFAULT_NEAR: f32 = -1000.0;
-const DEFAULT_FAR: f32 = -20000.0;
+use crate::obj::{
+    cub::{
+        COLOR, DEFAULT_POSITION, DEFAULT_ROTATION, INDEX, NORMAL, POSITION,
+        create_vertex_buffer_layout, generate_position_buffer, generate_vertex,
+    },
+    scene::generate_scene_buffer,
+};
 
 const DEFAULT_MULTI_SAMPLE: u32 = 4;
 
@@ -26,10 +19,10 @@ pub struct WgpuCtx<'w> {
     device: wgpu::Device,
     queue: wgpu::Queue,
     render_pipeline: wgpu::RenderPipeline,
-    vertex_buffer: wgpu::Buffer,
-    uniform_data: [f32; 20],
-    uniform_buffer: wgpu::Buffer,
     uniform_bind_group: wgpu::BindGroup,
+    scene_data: [f32; 12],
+    scene_buffer: wgpu::Buffer,
+    vertex_buffer: wgpu::Buffer,
     depth_texture: wgpu::Texture,
     multi_sample_texture: wgpu::Texture,
 }
@@ -104,57 +97,49 @@ impl<'w> WgpuCtx<'w> {
             usage: wgpu::BufferUsages::VERTEX,
         });
 
-        let uniform_data: [f32; 20] = [
-            width as f32,
-            height as f32,
-            DEFAULT_NEAR, // near
-            DEFAULT_FAR,  // far
-            DEFAULT_LIGHT_POSITION[0],
-            DEFAULT_LIGHT_POSITION[1],
-            DEFAULT_LIGHT_POSITION[2],
-            0.0, // parallel light
-            DEFAULT_EYE_POSITION[0],
-            DEFAULT_EYE_POSITION[1],
-            DEFAULT_EYE_POSITION[2],
-            0.0,
-            DEFAULT_ROTATION[0],
-            DEFAULT_ROTATION[1],
-            DEFAULT_ROTATION[2],
-            0.0, // rotation
-            DEFAULT_POSITION[0],
-            DEFAULT_POSITION[1],
-            DEFAULT_POSITION[2],
-            0.0, // translation
-        ];
-
-        let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: None,
-            contents: bytemuck::cast_slice(&uniform_data),
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-        });
-
         let uniform_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 label: None,
-                entries: &[wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
                     },
-                    count: None,
-                }],
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    },
+                ],
             });
+
+        let (scene_data, scene_buffer) = generate_scene_buffer(size, &device);
 
         let uniform_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: None,
             layout: &uniform_bind_group_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: uniform_buffer.as_entire_binding(),
-            }],
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: scene_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: generate_position_buffer(DEFAULT_ROTATION, DEFAULT_POSITION, &device)
+                        .as_entire_binding(),
+                },
+            ],
         });
 
         let render_pipeline_layout =
@@ -176,8 +161,8 @@ impl<'w> WgpuCtx<'w> {
             multi_sample_texture,
             render_pipeline,
             vertex_buffer,
-            uniform_data,
-            uniform_buffer,
+            scene_data,
+            scene_buffer,
             uniform_bind_group,
         }
     }
@@ -221,12 +206,12 @@ impl<'w> WgpuCtx<'w> {
             view_formats: &[self.surface_config.format],
         });
 
-        self.uniform_data[0] = self.surface_config.width.max(1) as f32;
-        self.uniform_data[1] = self.surface_config.height.max(1) as f32;
+        self.scene_data[0] = self.surface_config.width.max(1) as f32;
+        self.scene_data[1] = self.surface_config.height.max(1) as f32;
         self.queue.write_buffer(
-            &self.uniform_buffer,
+            &self.scene_buffer,
             0,
-            bytemuck::cast_slice(&self.uniform_data),
+            bytemuck::cast_slice(&self.scene_data),
         );
     }
 
