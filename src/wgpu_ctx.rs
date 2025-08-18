@@ -253,7 +253,7 @@ impl<'w> WgpuCtx<'w> {
                             .create_view(&wgpu::TextureViewDescriptor::default()),
                     ),
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
+                        load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
                         store: wgpu::StoreOp::Store,
                     },
                 })],
