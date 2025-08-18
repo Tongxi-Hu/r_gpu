@@ -27,7 +27,11 @@ pub struct WgpuCtx<'w> {
     queue: wgpu::Queue,
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
+    uniform_data: [f32; 20],
+    uniform_buffer: wgpu::Buffer,
     uniform_bind_group: wgpu::BindGroup,
+    depth_texture: wgpu::Texture,
+    multi_sample_texture: wgpu::Texture,
 }
 
 impl<'w> WgpuCtx<'w> {
@@ -64,13 +68,43 @@ impl<'w> WgpuCtx<'w> {
         let surface_config = surface.get_default_config(&adapter, width, height).unwrap();
         surface.configure(&device, &surface_config);
 
+        let depth_texture = device.create_texture(&wgpu::TextureDescriptor {
+            label: None,
+            size: wgpu::Extent3d {
+                width: surface_config.width.max(1),
+                height: surface_config.height.max(1),
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: DEFAULT_MULTI_SAMPLE,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Depth32FloatStencil8,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            view_formats: &[wgpu::TextureFormat::Depth32FloatStencil8],
+        });
+
+        let multi_sample_texture = device.create_texture(&wgpu::TextureDescriptor {
+            label: None,
+            size: wgpu::Extent3d {
+                width: surface_config.width.max(1),
+                height: surface_config.height.max(1),
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: DEFAULT_MULTI_SAMPLE,
+            dimension: wgpu::TextureDimension::D2,
+            format: surface_config.format,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            view_formats: &[surface_config.format],
+        });
+
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: None,
             contents: bytemuck::cast_slice(&generate_vertex(&POSITION, &COLOR, &NORMAL, &INDEX)),
             usage: wgpu::BufferUsages::VERTEX,
         });
 
-        let uniform_content: &[f32; 20] = &[
+        let uniform_data: [f32; 20] = [
             width as f32,
             height as f32,
             DEFAULT_NEAR, // near
@@ -95,7 +129,7 @@ impl<'w> WgpuCtx<'w> {
 
         let uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: None,
-            contents: bytemuck::cast_slice(uniform_content),
+            contents: bytemuck::cast_slice(&uniform_data),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
@@ -138,8 +172,12 @@ impl<'w> WgpuCtx<'w> {
             surface_config,
             device,
             queue,
+            depth_texture,
+            multi_sample_texture,
             render_pipeline,
             vertex_buffer,
+            uniform_data,
+            uniform_buffer,
             uniform_bind_group,
         }
     }
@@ -152,21 +190,8 @@ impl<'w> WgpuCtx<'w> {
         self.surface_config.width = size.width.max(1);
         self.surface_config.height = size.height.max(1);
         self.surface.configure(&self.device, &self.surface_config);
-    }
 
-    pub fn draw(&mut self) {
-        let surface_texture = self
-            .surface
-            .get_current_texture()
-            .expect("Failed to acquire next texture");
-        let texture_view = surface_texture
-            .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-
-        let depth_texture = &self.device.create_texture(&wgpu::TextureDescriptor {
+        self.depth_texture = self.device.create_texture(&wgpu::TextureDescriptor {
             label: None,
             size: wgpu::Extent3d {
                 width: self.surface_config.width.max(1),
@@ -181,7 +206,7 @@ impl<'w> WgpuCtx<'w> {
             view_formats: &[wgpu::TextureFormat::Depth32FloatStencil8],
         });
 
-        let multi_sample_texture = &self.device.create_texture(&wgpu::TextureDescriptor {
+        self.multi_sample_texture = self.device.create_texture(&wgpu::TextureDescriptor {
             label: None,
             size: wgpu::Extent3d {
                 width: self.surface_config.width.max(1),
@@ -196,22 +221,46 @@ impl<'w> WgpuCtx<'w> {
             view_formats: &[self.surface_config.format],
         });
 
-        let multi_sample_buffer =
-            multi_sample_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        self.uniform_data[0] = self.surface_config.width.max(1) as f32;
+        self.uniform_data[1] = self.surface_config.height.max(1) as f32;
+        self.queue.write_buffer(
+            &self.uniform_buffer,
+            0,
+            bytemuck::cast_slice(&self.uniform_data),
+        );
+    }
+
+    pub fn draw(&mut self) {
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+
+        let surface_texture = self
+            .surface
+            .get_current_texture()
+            .expect("Failed to acquire next texture");
 
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &multi_sample_buffer,
-                    resolve_target: Some(&texture_view),
+                    view: &self
+                        .multi_sample_texture
+                        .create_view(&wgpu::TextureViewDescriptor::default()),
+                    resolve_target: Some(
+                        &surface_texture
+                            .texture
+                            .create_view(&wgpu::TextureViewDescriptor::default()),
+                    ),
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
                         store: wgpu::StoreOp::Store,
                     },
                 })],
                 depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                    view: &depth_texture.create_view(&wgpu::TextureViewDescriptor::default()),
+                    view: &self
+                        .depth_texture
+                        .create_view(&wgpu::TextureViewDescriptor::default()),
                     depth_ops: Some(wgpu::Operations {
                         load: wgpu::LoadOp::Clear(1.0),
                         store: wgpu::StoreOp::Store,
