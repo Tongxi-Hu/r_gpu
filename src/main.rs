@@ -5,7 +5,7 @@ use crate::app::App;
 mod app;
 mod common;
 mod obj;
-mod wgpu_ctx;
+mod renderer;
 
 fn main() -> Result<(), EventLoopError> {
     let event_loop = EventLoop::new().unwrap();

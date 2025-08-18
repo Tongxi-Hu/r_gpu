@@ -7,7 +7,7 @@ use winit::{
     window::{Window, WindowId},
 };
 
-use crate::wgpu_ctx::WgpuCtx;
+use crate::renderer::WgpuCtx;
 
 #[derive(Default)]
 pub struct App<'w> {
