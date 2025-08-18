@@ -1,6 +1,6 @@
 use std::{f32, sync::Arc};
 
-use wgpu::{Face, util::DeviceExt};
+use wgpu::{Face, FeaturesWGPU, FeaturesWebGPU, util::DeviceExt};
 use winit::{dpi::PhysicalSize, window::Window};
 
 use crate::vertex::{COLOR, INDEX, NORMAL, POSITION, create_vertex_buffer_layout, generate_vertex};
@@ -17,6 +17,8 @@ const DEFAULT_EYE_POSITION: [f32; 3] = [0.0, 0.0, 0.0];
 // perspective info
 const DEFAULT_NEAR: f32 = -1000.0;
 const DEFAULT_FAR: f32 = -20000.0;
+
+const DEFAULT_MULTI_SAMPLE: u32 = 4;
 
 pub struct WgpuCtx<'w> {
     surface: wgpu::Surface<'w>,
@@ -44,7 +46,10 @@ impl<'w> WgpuCtx<'w> {
         let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor {
                 label: None,
-                required_features: wgpu::Features::empty(),
+                required_features: wgpu::Features {
+                    features_webgpu: FeaturesWebGPU::DEPTH32FLOAT_STENCIL8,
+                    features_wgpu: FeaturesWGPU::empty(),
+                },
                 required_limits: wgpu::Limits::downlevel_webgl2_defaults()
                     .using_resolution(adapter.limits()),
                 memory_hints: wgpu::MemoryHints::Performance,
@@ -169,19 +174,37 @@ impl<'w> WgpuCtx<'w> {
                 depth_or_array_layers: 1,
             },
             mip_level_count: 1,
-            sample_count: 1,
+            sample_count: DEFAULT_MULTI_SAMPLE,
             dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Depth32Float,
+            format: wgpu::TextureFormat::Depth32FloatStencil8,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[wgpu::TextureFormat::Depth32Float],
+            view_formats: &[wgpu::TextureFormat::Depth32FloatStencil8],
         });
+
+        let multi_sample_texture = &self.device.create_texture(&wgpu::TextureDescriptor {
+            label: None,
+            size: wgpu::Extent3d {
+                width: self.surface_config.width.max(1),
+                height: self.surface_config.height.max(1),
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: DEFAULT_MULTI_SAMPLE,
+            dimension: wgpu::TextureDimension::D2,
+            format: self.surface_config.format,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            view_formats: &[self.surface_config.format],
+        });
+
+        let multi_sample_buffer =
+            multi_sample_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &texture_view,
-                    resolve_target: None,
+                    view: &multi_sample_buffer,
+                    resolve_target: Some(&texture_view),
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
                         store: wgpu::StoreOp::Store,
@@ -193,7 +216,10 @@ impl<'w> WgpuCtx<'w> {
                         load: wgpu::LoadOp::Clear(1.0),
                         store: wgpu::StoreOp::Store,
                     }),
-                    stencil_ops: None,
+                    stencil_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(0),
+                        store: wgpu::StoreOp::Store,
+                    }),
                 }),
                 timestamp_writes: None,
                 occlusion_query_set: None,
@@ -241,11 +267,15 @@ fn create_pipeline(
         depth_stencil: Some(wgpu::DepthStencilState {
             depth_write_enabled: true,
             depth_compare: wgpu::CompareFunction::Less,
-            format: wgpu::TextureFormat::Depth32Float,
+            format: wgpu::TextureFormat::Depth32FloatStencil8,
             bias: wgpu::DepthBiasState::default(),
             stencil: wgpu::StencilState::default(),
         }),
-        multisample: wgpu::MultisampleState::default(),
+        multisample: wgpu::MultisampleState {
+            count: DEFAULT_MULTI_SAMPLE,
+            mask: !0,
+            alpha_to_coverage_enabled: false,
+        },
         multiview: None,
         cache: None,
     })
