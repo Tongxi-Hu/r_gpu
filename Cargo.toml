@@ -8,3 +8,4 @@ winit = { version = "0.30.11" }
 pollster = { version = "0.4" }
 wgpu = { version = "25.0.2" }
 bytemuck = { version = "1.23.0" }
+wavefront_obj = { version = "11.0.0" }

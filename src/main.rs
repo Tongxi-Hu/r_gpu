@@ -4,7 +4,7 @@ use crate::app::App;
 
 mod app;
 mod common;
-mod obj;
+mod object;
 mod renderer;
 
 fn main() -> Result<(), EventLoopError> {

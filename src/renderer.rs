@@ -1,14 +1,11 @@
 use std::{f32, sync::Arc};
 
-use wgpu::{Face, FeaturesWGPU, FeaturesWebGPU, util::DeviceExt};
+use wgpu::{Face, FeaturesWGPU, FeaturesWebGPU};
 use winit::{dpi::PhysicalSize, window::Window};
 
-use crate::obj::{
-    cub::{
-        COLOR, DEFAULT_POSITION, DEFAULT_ROTATION, INDEX, NORMAL, POSITION,
-        create_vertex_buffer_layout, generate_position_buffer, generate_vertex,
-    },
-    scene::generate_scene_buffer,
+use crate::{
+    common::create_vertex_buffer_layout,
+    object::{scene::generate_scene_buffer, tea_pot::generate_teapot_vertex_position},
 };
 
 const DEFAULT_MULTI_SAMPLE: u32 = 4;
@@ -23,6 +20,7 @@ pub struct WebGpuContext<'w> {
     scene_data: [f32; 12],
     scene_buffer: wgpu::Buffer,
     vertex_buffer: wgpu::Buffer,
+    vertex_length: u32,
     depth_texture: wgpu::Texture,
     multi_sample_texture: wgpu::Texture,
 }
@@ -91,11 +89,8 @@ impl<'w> WebGpuContext<'w> {
             view_formats: &[surface_config.format],
         });
 
-        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: None,
-            contents: bytemuck::cast_slice(&generate_vertex(&POSITION, &COLOR, &NORMAL, &INDEX)),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
+        let (vertex_length, vertex_buffer, position_buffer) =
+            generate_teapot_vertex_position(&device);
 
         let uniform_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -136,8 +131,7 @@ impl<'w> WebGpuContext<'w> {
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: generate_position_buffer(DEFAULT_ROTATION, DEFAULT_POSITION, &device)
-                        .as_entire_binding(),
+                    resource: position_buffer.as_entire_binding(),
                 },
             ],
         });
@@ -161,6 +155,7 @@ impl<'w> WebGpuContext<'w> {
             multi_sample_texture,
             render_pipeline,
             vertex_buffer,
+            vertex_length,
             scene_data,
             scene_buffer,
             uniform_bind_group,
@@ -261,7 +256,7 @@ impl<'w> WebGpuContext<'w> {
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_bind_group(0, &self.uniform_bind_group, &[]);
-            render_pass.draw(0..INDEX.len() as u32, 0..1);
+            render_pass.draw(0..self.vertex_length, 0..1);
         }
 
         self.queue.submit(Some(encoder.finish()));

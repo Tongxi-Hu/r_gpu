@@ -5,6 +5,7 @@ struct Uniform {
 }
 
 struct Transform {
+    scale: vec4<f32>,
     rotation: vec4<f32>,
     translation: vec4<f32>,
 }
@@ -35,13 +36,13 @@ const SHININESS: f32= 512.0;
 
 @vertex
 fn vs_main(in: Input) -> Inter {
-    // physical space transformation 3*3 mat
+    // object space transformation
+    let scale = scaling_3d(tran.scale);
     let rotation_x = rotation_3d_x(tran.rotation.x);
     let rotation_y = rotation_3d_y(tran.rotation.y);
     let rotation_z = rotation_3d_z(tran.rotation.z);
     let translation = translation_3d(tran.translation);
-    let transformed = vec4<f32>(in.position.xyz, 1.0) * (rotation_x * rotation_y * rotation_z * translation);
-
+    let transformed = vec4<f32>(in.position.xyz, 1.0) * (scale * rotation_x * rotation_y * rotation_z * translation);
 
     var inter: Inter;
     inter.position = transformed * to_clip_space(uni.view);
