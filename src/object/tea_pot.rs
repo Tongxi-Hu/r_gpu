@@ -6,12 +6,12 @@ use wgpu::util::DeviceExt;
 use crate::common::{Position, Rotation, Scale, Vertex};
 
 // position info
-pub const DEFAULT_SCALE: Scale = [100.0, 100.0, 100.0];
-pub const DEFAULT_ROTATION: Rotation = [0.0, 0.0, 0.0];
-pub const DEFAULT_POSITION: Position = [0., -1000.0, -1300.0];
+pub const DEFAULT_SCALE: Scale = [50.0, 50.0, 50.0];
+pub const DEFAULT_ROTATION: Rotation = [-90.0, 90.0, 0.0];
+pub const DEFAULT_POSITION: Position = [0., -300.0, -1300.0];
 
 pub fn generate_teapot_vertex() -> (u32, Vec<Vertex>) {
-    let content = fs::read_to_string("src/object/asset/body.obj").unwrap();
+    let content = fs::read_to_string("src/object/asset/head.obj").unwrap();
     let result = obj::parse(content).unwrap();
     let mut vertex = vec![];
     let count = result.objects[0].vertices.len();
