@@ -13,7 +13,7 @@ use crate::obj::{
 
 const DEFAULT_MULTI_SAMPLE: u32 = 4;
 
-pub struct WgpuCtx<'w> {
+pub struct WebGpuContext<'w> {
     surface: wgpu::Surface<'w>,
     surface_config: wgpu::SurfaceConfiguration,
     device: wgpu::Device,
@@ -27,11 +27,11 @@ pub struct WgpuCtx<'w> {
     multi_sample_texture: wgpu::Texture,
 }
 
-impl<'w> WgpuCtx<'w> {
+impl<'w> WebGpuContext<'w> {
     pub async fn new_async(window: Arc<Window>) -> Self {
-        let instannce = wgpu::Instance::default();
-        let surface = instannce.create_surface(window.clone()).unwrap();
-        let adapter = instannce
+        let instance = wgpu::Instance::default();
+        let surface = instance.create_surface(window.clone()).unwrap();
+        let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::default(),
                 force_fallback_adapter: false,
@@ -168,7 +168,7 @@ impl<'w> WgpuCtx<'w> {
     }
 
     pub fn new(window: Arc<Window>) -> Self {
-        pollster::block_on(WgpuCtx::new_async(window))
+        pollster::block_on(WebGpuContext::new_async(window))
     }
 
     pub fn resize(&mut self, size: PhysicalSize<u32>) {

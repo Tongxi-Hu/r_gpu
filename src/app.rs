@@ -7,12 +7,12 @@ use winit::{
     window::{Window, WindowId},
 };
 
-use crate::renderer::WgpuCtx;
+use crate::renderer::WebGpuContext;
 
 #[derive(Default)]
 pub struct App<'w> {
     window: Option<Arc<Window>>,
-    wgpu_ctx: Option<WgpuCtx<'w>>,
+    web_gpu_context: Option<WebGpuContext<'w>>,
 }
 
 impl<'w> ApplicationHandler for App<'w> {
@@ -24,8 +24,8 @@ impl<'w> ApplicationHandler for App<'w> {
                     .create_window(window_attributes)
                     .expect("error create window"),
             );
-            let wgpu_ctx = WgpuCtx::new(window.clone());
-            self.wgpu_ctx = Some(wgpu_ctx);
+            let web_gpu_context = WebGpuContext::new(window.clone());
+            self.web_gpu_context = Some(web_gpu_context);
             self.window = Some(window);
         }
     }
@@ -39,16 +39,16 @@ impl<'w> ApplicationHandler for App<'w> {
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::Resized(size) => {
-                if let (Some(window), Some(wgpu_ctx)) =
-                    (self.window.as_ref(), self.wgpu_ctx.as_mut())
+                if let (Some(window), Some(web_gpu_context)) =
+                    (self.window.as_ref(), self.web_gpu_context.as_mut())
                 {
-                    wgpu_ctx.resize(size);
+                    web_gpu_context.resize(size);
                     window.request_redraw();
                 }
             }
             WindowEvent::RedrawRequested => {
-                if let Some(wgpu_ctx) = self.wgpu_ctx.as_mut() {
-                    wgpu_ctx.draw();
+                if let Some(web_gpu_context) = self.web_gpu_context.as_mut() {
+                    web_gpu_context.draw();
                 }
             }
             _ => (),
