@@ -1,6 +1,7 @@
 use std::{fs::File, io::BufReader};
 
 use obj::load_obj;
+use wgpu::{Buffer, Device, Queue};
 
 pub type Color = [f32; 3];
 pub type Position = [f32; 3];
@@ -48,4 +49,9 @@ pub fn load_obj_model(path: &str) -> Result<obj::Obj, Box<dyn std::error::Error>
     let buffer = BufReader::new(File::open(path)?);
     let model = load_obj(buffer)?;
     Ok(model)
+}
+
+pub trait WithGPUBuffer<const SIZE: usize> {
+    fn init_buffer(&mut self, device: &Device) -> &Buffer;
+    fn update_buffer(&mut self, queue: &Queue);
 }

@@ -1,30 +1,28 @@
 use std::{f32, sync::Arc};
 
-use wgpu::{Face, FeaturesWGPU, FeaturesWebGPU};
+use wgpu::{
+    BindGroup, BindGroupLayout, Device, Face, FeaturesWGPU, FeaturesWebGPU, Queue, RenderPipeline,
+    Surface, SurfaceConfiguration, Texture,
+};
 use winit::{dpi::PhysicalSize, window::Window};
 
 use crate::{
     common::create_vertex_buffer_layout,
-    object::{scene::generate_scene_buffer, tea_pot::generate_teapot_vertex_position},
+    object::{scene::generate_scene_buffer, world::World},
 };
 
 const DEFAULT_MULTI_SAMPLE: u32 = 4;
 
 pub struct WebGpuContext<'w> {
-    surface: wgpu::Surface<'w>,
-    surface_config: wgpu::SurfaceConfiguration,
-    device: wgpu::Device,
-    queue: wgpu::Queue,
-    render_pipeline: wgpu::RenderPipeline,
-    uniform_bind_group: wgpu::BindGroup,
-    scene_data: [f32; 12],
-    scene_buffer: wgpu::Buffer,
-    position_data: [f32; 12],
-    position_buffer: wgpu::Buffer,
-    vertex_buffer: wgpu::Buffer,
-    vertex_length: u32,
-    depth_texture: wgpu::Texture,
-    multi_sample_texture: wgpu::Texture,
+    pub device: Device,
+    pub queue: Queue,
+    pub uniform_bind_group_layout: BindGroupLayout,
+
+    surface: Surface<'w>,
+    surface_config: SurfaceConfiguration,
+    render_pipeline: RenderPipeline,
+    depth_texture: Texture,
+    multi_sample_texture: Texture,
 }
 
 impl<'w> WebGpuContext<'w> {
@@ -91,9 +89,6 @@ impl<'w> WebGpuContext<'w> {
             view_formats: &[surface_config.format],
         });
 
-        let (vertex_length, vertex_buffer, position_data, position_buffer) =
-            generate_teapot_vertex_position(&device);
-
         let uniform_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 label: None,
@@ -121,23 +116,6 @@ impl<'w> WebGpuContext<'w> {
                 ],
             });
 
-        let (scene_data, scene_buffer) = generate_scene_buffer(size, &device);
-
-        let uniform_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: None,
-            layout: &uniform_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: scene_buffer.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: position_buffer.as_entire_binding(),
-                },
-            ],
-        });
-
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: None,
@@ -156,13 +134,7 @@ impl<'w> WebGpuContext<'w> {
             depth_texture,
             multi_sample_texture,
             render_pipeline,
-            vertex_buffer,
-            vertex_length,
-            scene_data,
-            scene_buffer,
-            position_data,
-            position_buffer,
-            uniform_bind_group,
+            uniform_bind_group_layout,
         }
     }
 
@@ -204,25 +176,8 @@ impl<'w> WebGpuContext<'w> {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             view_formats: &[self.surface_config.format],
         });
-
-        self.scene_data[0] = self.surface_config.width.max(1) as f32;
-        self.scene_data[1] = self.surface_config.height.max(1) as f32;
-        self.queue.write_buffer(
-            &self.scene_buffer,
-            0,
-            bytemuck::cast_slice(&self.scene_data),
-        );
     }
-
-    pub fn move_near(&mut self) {
-        self.position_data[10] += 10.0;
-        self.queue.write_buffer(
-            &self.position_buffer,
-            0,
-            bytemuck::cast_slice(&self.position_data),
-        );
-    }
-    pub fn draw(&mut self) {
+    pub fn draw(&mut self, world: &World) {
         let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
@@ -266,9 +221,7 @@ impl<'w> WebGpuContext<'w> {
                 occlusion_query_set: None,
             });
             render_pass.set_pipeline(&self.render_pipeline);
-            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass.set_bind_group(0, &self.uniform_bind_group, &[]);
-            render_pass.draw(0..self.vertex_length, 0..1);
+            world.set_pipeline(&mut render_pass)
         }
 
         self.queue.submit(Some(encoder.finish()));
