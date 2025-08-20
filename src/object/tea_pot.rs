@@ -12,11 +12,10 @@ pub fn generate_teapot_vertex() -> (u32, Vec<Vertex>) {
     let mut vertex = vec![];
     for i in model.indices {
         let position = model.vertices[i as usize].position;
-        let normal = model.vertices[i as usize].normal;
         vertex.push(Vertex {
             position,
             color: [0.0, 1.0, 0.0],
-            normal,
+            normal: [0.0, 0.0, 1.0],
         });
     }
 
