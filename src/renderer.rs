@@ -1,15 +1,16 @@
-use std::{f32, sync::Arc};
+use std::sync::Arc;
 
 use wgpu::{
-    BindGroup, BindGroupLayout, Device, Face, FeaturesWGPU, FeaturesWebGPU, Queue, RenderPipeline,
-    Surface, SurfaceConfiguration, Texture,
+    BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType,
+    BufferBindingType, CommandEncoderDescriptor, Device, DeviceDescriptor, Extent3d, Face,
+    Features, FeaturesWGPU, FeaturesWebGPU, Instance, Limits, MemoryHints,
+    PipelineLayoutDescriptor, PowerPreference, Queue, RenderPipeline, RequestAdapterOptions,
+    ShaderStages, Surface, SurfaceConfiguration, Texture, TextureDescriptor, TextureDimension,
+    TextureFormat, TextureUsages, Trace,
 };
 use winit::{dpi::PhysicalSize, window::Window};
 
-use crate::{
-    common::create_vertex_buffer_layout,
-    object::{scene::generate_scene_buffer, world::World},
-};
+use crate::{common::create_vertex_buffer_layout, object::world::World};
 
 const DEFAULT_MULTI_SAMPLE: u32 = 4;
 
@@ -27,11 +28,11 @@ pub struct WebGpuContext<'w> {
 
 impl<'w> WebGpuContext<'w> {
     pub async fn new_async(window: Arc<Window>) -> Self {
-        let instance = wgpu::Instance::default();
+        let instance = Instance::default();
         let surface = instance.create_surface(window.clone()).unwrap();
         let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::default(),
+            .request_adapter(&RequestAdapterOptions {
+                power_preference: PowerPreference::default(),
                 force_fallback_adapter: false,
                 compatible_surface: Some(&surface),
             })
@@ -39,16 +40,16 @@ impl<'w> WebGpuContext<'w> {
             .expect("fail to find adaptor");
 
         let (device, queue) = adapter
-            .request_device(&wgpu::DeviceDescriptor {
+            .request_device(&DeviceDescriptor {
                 label: None,
-                required_features: wgpu::Features {
+                required_features: Features {
                     features_webgpu: FeaturesWebGPU::DEPTH32FLOAT_STENCIL8,
                     features_wgpu: FeaturesWGPU::empty(),
                 },
-                required_limits: wgpu::Limits::downlevel_webgl2_defaults()
+                required_limits: Limits::downlevel_webgl2_defaults()
                     .using_resolution(adapter.limits()),
-                memory_hints: wgpu::MemoryHints::Performance,
-                trace: wgpu::Trace::Off,
+                memory_hints: MemoryHints::Performance,
+                trace: Trace::Off,
             })
             .await
             .expect("fail to create device");
@@ -59,7 +60,7 @@ impl<'w> WebGpuContext<'w> {
         let surface_config = surface.get_default_config(&adapter, width, height).unwrap();
         surface.configure(&device, &surface_config);
 
-        let depth_texture = device.create_texture(&wgpu::TextureDescriptor {
+        let depth_texture = device.create_texture(&TextureDescriptor {
             label: None,
             size: wgpu::Extent3d {
                 width: surface_config.width.max(1),
@@ -74,7 +75,7 @@ impl<'w> WebGpuContext<'w> {
             view_formats: &[wgpu::TextureFormat::Depth32FloatStencil8],
         });
 
-        let multi_sample_texture = device.create_texture(&wgpu::TextureDescriptor {
+        let multi_sample_texture = device.create_texture(&TextureDescriptor {
             label: None,
             size: wgpu::Extent3d {
                 width: surface_config.width.max(1),
@@ -90,24 +91,24 @@ impl<'w> WebGpuContext<'w> {
         });
 
         let uniform_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            device.create_bind_group_layout(&BindGroupLayoutDescriptor {
                 label: None,
                 entries: &[
-                    wgpu::BindGroupLayoutEntry {
+                    BindGroupLayoutEntry {
                         binding: 0,
-                        visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                        ty: wgpu::BindingType::Buffer {
-                            ty: wgpu::BufferBindingType::Uniform,
+                        visibility: ShaderStages::VERTEX_FRAGMENT,
+                        ty: BindingType::Buffer {
+                            ty: BufferBindingType::Uniform,
                             has_dynamic_offset: false,
                             min_binding_size: None,
                         },
                         count: None,
                     },
-                    wgpu::BindGroupLayoutEntry {
+                    BindGroupLayoutEntry {
                         binding: 1,
-                        visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                        ty: wgpu::BindingType::Buffer {
-                            ty: wgpu::BufferBindingType::Uniform,
+                        visibility: ShaderStages::VERTEX_FRAGMENT,
+                        ty: BindingType::Buffer {
+                            ty: BufferBindingType::Uniform,
                             has_dynamic_offset: false,
                             min_binding_size: None,
                         },
@@ -116,12 +117,11 @@ impl<'w> WebGpuContext<'w> {
                 ],
             });
 
-        let render_pipeline_layout =
-            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: None,
-                bind_group_layouts: &[&uniform_bind_group_layout],
-                push_constant_ranges: &[],
-            });
+        let render_pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
+            label: None,
+            bind_group_layouts: &[&uniform_bind_group_layout],
+            push_constant_ranges: &[],
+        });
 
         let render_pipeline =
             create_pipeline(&device, surface_config.format, &render_pipeline_layout);
@@ -147,22 +147,22 @@ impl<'w> WebGpuContext<'w> {
         self.surface_config.height = size.height.max(1);
         self.surface.configure(&self.device, &self.surface_config);
 
-        self.depth_texture = self.device.create_texture(&wgpu::TextureDescriptor {
+        self.depth_texture = self.device.create_texture(&TextureDescriptor {
             label: None,
-            size: wgpu::Extent3d {
+            size: Extent3d {
                 width: self.surface_config.width.max(1),
                 height: self.surface_config.height.max(1),
                 depth_or_array_layers: 1,
             },
             mip_level_count: 1,
             sample_count: DEFAULT_MULTI_SAMPLE,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Depth32FloatStencil8,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[wgpu::TextureFormat::Depth32FloatStencil8],
+            dimension: TextureDimension::D2,
+            format: TextureFormat::Depth32FloatStencil8,
+            usage: TextureUsages::RENDER_ATTACHMENT,
+            view_formats: &[TextureFormat::Depth32FloatStencil8],
         });
 
-        self.multi_sample_texture = self.device.create_texture(&wgpu::TextureDescriptor {
+        self.multi_sample_texture = self.device.create_texture(&TextureDescriptor {
             label: None,
             size: wgpu::Extent3d {
                 width: self.surface_config.width.max(1),
@@ -180,7 +180,7 @@ impl<'w> WebGpuContext<'w> {
     pub fn draw(&mut self, world: &World) {
         let mut encoder = self
             .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+            .create_command_encoder(&CommandEncoderDescriptor { label: None });
 
         let surface_texture = self
             .surface
