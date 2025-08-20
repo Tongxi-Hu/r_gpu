@@ -58,21 +58,6 @@ fn fs_main(inter: Inter) -> @location(0) vec4<f32> {
     return lighting(inter.color, inter.surface_vector, inter.surface_light_vector, inter.surface_eye_vector);
 }
 
-// generate 2d scaling matrix
-fn scaling_2d(scaling: f32) -> mat3x3<f32> {
-    return mat3x3<f32>(vec3<f32>(scaling, 0.0, 0.0), vec3<f32>(0.0, scaling, 0.0), vec3<f32>(0.0, 0.0, 1.0));
-}
-
-// generate 2d rotation matrix
-fn rotation_2d(rotation_deg: f32) -> mat3x3<f32> {
-    return mat3x3<f32>(vec3<f32>(cos(PI * rotation_deg / 180.0), - sin(PI * rotation_deg / 180.0), 0.0), vec3<f32>(sin(PI * rotation_deg / 180.0), cos(PI * rotation_deg / 180.0), 0.0), vec3<f32>(0.0, 0.0, 1.0));
-}
-
-// generate 2d translation matrix
-fn translation_2d(translation: vec2<f32>) -> mat3x3<f32> {
-    return mat3x3<f32>(vec3<f32>(1.0, 0.0, translation.x), vec3<f32>(0.0, 1.0, translation.y), vec3<f32>(0.0, 0.0, 1.0));
-}
-
 // generate 3d scaling matrix
 fn scaling_3d(scaling: vec4<f32>) -> mat4x4<f32> {
     return mat4x4<f32>(vec4<f32>(scaling.x, 0.0, 0.0, 0.0), vec4<f32>(0.0, scaling.y, 0.0, 0.0), vec4<f32>(0.0, 0.0, scaling.z, 0.0), vec4<f32>(0.0, 0.0, 0.0, 1.0));
