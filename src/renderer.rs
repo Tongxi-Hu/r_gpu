@@ -19,6 +19,8 @@ pub struct WebGpuContext<'w> {
     uniform_bind_group: wgpu::BindGroup,
     scene_data: [f32; 12],
     scene_buffer: wgpu::Buffer,
+    position_data: [f32; 12],
+    position_buffer: wgpu::Buffer,
     vertex_buffer: wgpu::Buffer,
     vertex_length: u32,
     depth_texture: wgpu::Texture,
@@ -89,7 +91,7 @@ impl<'w> WebGpuContext<'w> {
             view_formats: &[surface_config.format],
         });
 
-        let (vertex_length, vertex_buffer, position_buffer) =
+        let (vertex_length, vertex_buffer, position_data, position_buffer) =
             generate_teapot_vertex_position(&device);
 
         let uniform_bind_group_layout =
@@ -158,6 +160,8 @@ impl<'w> WebGpuContext<'w> {
             vertex_length,
             scene_data,
             scene_buffer,
+            position_data,
+            position_buffer,
             uniform_bind_group,
         }
     }
@@ -210,6 +214,14 @@ impl<'w> WebGpuContext<'w> {
         );
     }
 
+    pub fn move_near(&mut self) {
+        self.position_data[10] += 10.0;
+        self.queue.write_buffer(
+            &self.position_buffer,
+            0,
+            bytemuck::cast_slice(&self.position_data),
+        );
+    }
     pub fn draw(&mut self) {
         let mut encoder = self
             .device

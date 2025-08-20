@@ -22,7 +22,7 @@ pub fn generate_teapot_vertex() -> (u32, Vec<Vertex>) {
     (vertex.len() as u32, vertex)
 }
 
-pub fn generate_teapot_position(device: &wgpu::Device) -> wgpu::Buffer {
+pub fn generate_teapot_position(device: &wgpu::Device) -> ([f32; 12], wgpu::Buffer) {
     let data: [f32; 12] = [
         DEFAULT_SCALE[0],
         DEFAULT_SCALE[1],
@@ -38,20 +38,25 @@ pub fn generate_teapot_position(device: &wgpu::Device) -> wgpu::Buffer {
         0.0,
     ];
 
-    device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        label: None,
-        contents: bytemuck::cast_slice(&data),
-        usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-    })
+    (
+        data,
+        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: None,
+            contents: bytemuck::cast_slice(&data),
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        }),
+    )
 }
 
-pub fn generate_teapot_vertex_position(device: &wgpu::Device) -> (u32, wgpu::Buffer, wgpu::Buffer) {
+pub fn generate_teapot_vertex_position(
+    device: &wgpu::Device,
+) -> (u32, wgpu::Buffer, [f32; 12], wgpu::Buffer) {
     let vertex_data = generate_teapot_vertex();
     let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
         label: None,
         contents: bytemuck::cast_slice(&vertex_data.1),
         usage: wgpu::BufferUsages::VERTEX,
     });
-    let position_buffer = generate_teapot_position(device);
-    (vertex_data.0, vertex_buffer, position_buffer)
+    let (position_data, position_buffer) = generate_teapot_position(device);
+    (vertex_data.0, vertex_buffer, position_data, position_buffer)
 }

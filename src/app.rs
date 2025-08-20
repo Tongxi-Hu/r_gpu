@@ -2,8 +2,9 @@ use std::sync::Arc;
 
 use winit::{
     application::ApplicationHandler,
-    event::WindowEvent,
+    event::{ElementState, KeyEvent, WindowEvent},
     event_loop::ActiveEventLoop,
+    keyboard::{KeyCode, PhysicalKey},
     window::{Window, WindowId},
 };
 
@@ -49,6 +50,27 @@ impl<'w> ApplicationHandler for App<'w> {
             WindowEvent::RedrawRequested => {
                 if let Some(web_gpu_context) = self.web_gpu_context.as_mut() {
                     web_gpu_context.draw();
+                }
+            }
+            WindowEvent::KeyboardInput {
+                event:
+                    KeyEvent {
+                        physical_key: PhysicalKey::Code(code),
+                        state,
+                        ..
+                    },
+                ..
+            } => {
+                if let (Some(window), Some(web_gpu_context)) =
+                    (self.window.as_ref(), self.web_gpu_context.as_mut())
+                {
+                    match (code, state) {
+                        (KeyCode::ArrowUp, ElementState::Released) => {
+                            web_gpu_context.move_near();
+                            window.request_redraw();
+                        }
+                        _ => {}
+                    }
                 }
             }
             _ => (),
