@@ -68,6 +68,12 @@ impl Geometry {
         self.position_data[9] += move_info[1];
         self.position_data[10] += move_info[2];
     }
+
+    pub fn rotate_obj(&mut self, rotate_info: [f32; 3]) {
+        self.position_data[4] += rotate_info[0];
+        self.position_data[5] += rotate_info[1];
+        self.position_data[6] += rotate_info[2];
+    }
 }
 
 pub fn generate_teapot() -> Geometry {

@@ -43,6 +43,12 @@ impl World {
         });
     }
 
+    pub fn rotate_obj(&mut self, rotate_info: [f32; 3]) {
+        self.geometries.values_mut().for_each(|geo| {
+            geo.rotate_obj(rotate_info);
+        });
+    }
+
     pub fn init_buffer(&mut self, device: &wgpu::Device, bind_group_layout: &BindGroupLayout) {
         self.scene.init_buffer(device);
         self.geometries.values_mut().for_each(|geo| {

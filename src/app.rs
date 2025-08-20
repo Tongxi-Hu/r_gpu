@@ -3,7 +3,7 @@ use std::sync::Arc;
 use winit::{
     application::ApplicationHandler,
     dpi::PhysicalSize,
-    event::{ElementState, KeyEvent, WindowEvent},
+    event::{ElementState, KeyEvent, MouseScrollDelta, WindowEvent},
     event_loop::ActiveEventLoop,
     keyboard::{KeyCode, PhysicalKey},
     window::{Window, WindowId},
@@ -79,6 +79,14 @@ impl<'w> ApplicationHandler for App<'w> {
                     web_gpu_context.draw(world);
                 }
             }
+            WindowEvent::MouseWheel { delta, .. } => {
+                if let (MouseScrollDelta::PixelDelta(v), Some(world), Some(window)) =
+                    (delta, self.world.as_mut(), self.window.as_mut())
+                {
+                    world.move_obj([v.x as f32, -v.y as f32, 0.0]);
+                    window.request_redraw();
+                }
+            }
             WindowEvent::KeyboardInput {
                 event:
                     KeyEvent {
@@ -91,19 +99,19 @@ impl<'w> ApplicationHandler for App<'w> {
                 if let (Some(window), Some(world)) = (self.window.as_ref(), self.world.as_mut()) {
                     match (code, state) {
                         (KeyCode::KeyW, ElementState::Released) => {
-                            world.move_obj([0.0, 0.0, -STEP]);
+                            world.rotate_obj([-STEP, 0.0, 0.0]);
                             window.request_redraw();
                         }
                         (KeyCode::KeyS, ElementState::Released) => {
-                            world.move_obj([0.0, 0.0, STEP]);
+                            world.rotate_obj([STEP, 0.0, 0.0]);
                             window.request_redraw();
                         }
                         (KeyCode::KeyA, ElementState::Released) => {
-                            world.move_obj([-STEP, 0.0, 0.0]);
+                            world.rotate_obj([0.0, -STEP, 0.0]);
                             window.request_redraw();
                         }
                         (KeyCode::KeyD, ElementState::Released) => {
-                            world.move_obj([STEP, 0.0, 0.0]);
+                            world.rotate_obj([0.0, STEP, 0.0]);
                             window.request_redraw();
                         }
                         _ => {}
