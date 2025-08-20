@@ -1,29 +1,26 @@
-use std::fs;
-
-use wavefront_obj::obj;
 use wgpu::util::DeviceExt;
 
-use crate::common::{Position, Rotation, Scale, Vertex};
+use crate::common::{Position, Rotation, Scale, Vertex, load_obj_model};
 
 // position info
-pub const DEFAULT_SCALE: Scale = [50.0, 50.0, 50.0];
-pub const DEFAULT_ROTATION: Rotation = [-90.0, 90.0, 0.0];
-pub const DEFAULT_POSITION: Position = [0., -300.0, -1300.0];
+pub const DEFAULT_SCALE: Scale = [100.0, 100.0, 100.0];
+pub const DEFAULT_ROTATION: Rotation = [0.0, 0.0, 90.0];
+pub const DEFAULT_POSITION: Position = [0.0, 0.0, -1500.0];
 
 pub fn generate_teapot_vertex() -> (u32, Vec<Vertex>) {
-    let content = fs::read_to_string("src/object/asset/head.obj").unwrap();
-    let result = obj::parse(content).unwrap();
+    let model = load_obj_model("src/object/asset/teapot.obj").unwrap();
     let mut vertex = vec![];
-    let count = result.objects[0].vertices.len();
-    for (i, v) in result.objects[0].vertices.iter().enumerate() {
-        let normal = result.objects[0].normals[i / 3];
+    for i in model.indices {
+        let position = model.vertices[i as usize].position;
+        let normal = model.vertices[i as usize].normal;
         vertex.push(Vertex {
-            position: [v.x as f32, v.y as f32, v.z as f32],
+            position,
             color: [0.0, 1.0, 0.0],
-            normal: [normal.x as f32, normal.y as f32, normal.z as f32],
+            normal,
         });
     }
-    (count as u32, vertex)
+
+    (vertex.len() as u32, vertex)
 }
 
 pub fn generate_teapot_position(device: &wgpu::Device) -> wgpu::Buffer {

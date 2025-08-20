@@ -1,3 +1,7 @@
+use std::{fs::File, io::BufReader};
+
+use obj::load_obj;
+
 pub type Color = [f32; 3];
 pub type Position = [f32; 3];
 pub type Normal = [f32; 3];
@@ -38,4 +42,10 @@ pub fn create_vertex_buffer_layout() -> wgpu::VertexBufferLayout<'static> {
             },
         ],
     }
+}
+
+pub fn load_obj_model(path: &str) -> Result<obj::Obj, Box<dyn std::error::Error>> {
+    let buffer = BufReader::new(File::open(path)?);
+    let model = load_obj(buffer)?;
+    Ok(model)
 }
