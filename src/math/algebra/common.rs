@@ -1,3 +1,5 @@
+use core::f32;
+
 use crate::constant::EPSILON;
 
 pub trait FuzzyEq {
@@ -8,6 +10,10 @@ impl FuzzyEq for f32 {
     fn fuzzy_eq(&self, other: &Self) -> bool {
         (*self - *other).abs() <= EPSILON
     }
+}
+
+pub fn deg_to_rad(deg: f32) -> f32 {
+    f32::consts::PI * (deg / 180.0)
 }
 
 pub trait Dimension4 {

@@ -1,5 +1,7 @@
 use std::ops::{Index, IndexMut, Mul};
 
+use crate::math::algebra::common::deg_to_rad;
+
 use super::common::{Determinant, Dimension4, FuzzyEq};
 
 #[repr(C)]
@@ -204,7 +206,8 @@ impl Matrix<4> {
         }
     }
 
-    pub fn rotate_x(r: f32) -> Matrix<4> {
+    pub fn rotate_x(deg: f32) -> Matrix<4> {
+        let r = deg_to_rad(deg);
         Matrix::<4> {
             data: [
                 [1.0, 0.0, 0.0, 0.0],
@@ -215,7 +218,8 @@ impl Matrix<4> {
         }
     }
 
-    pub fn rotate_y(r: f32) -> Matrix<4> {
+    pub fn rotate_y(deg: f32) -> Matrix<4> {
+        let r = deg_to_rad(deg);
         Matrix::<4> {
             data: [
                 [r.cos(), 0.0, r.sin(), 0.0],
@@ -226,7 +230,8 @@ impl Matrix<4> {
         }
     }
 
-    pub fn rotate_z(r: f32) -> Matrix<4> {
+    pub fn rotate_z(deg: f32) -> Matrix<4> {
+        let r = deg_to_rad(deg);
         Matrix::<4> {
             data: [
                 [r.cos(), -r.sin(), 0.0, 0.0],
