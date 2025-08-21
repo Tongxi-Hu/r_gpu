@@ -11,9 +11,9 @@ struct Transform {
 }
 
 struct Input {
-    @location(0) position: vec3<f32>,
-    @location(1) color: vec3<f32>,
-    @location(2) norm: vec3<f32>,
+    @location(0) position: vec4<f32>,
+    @location(1) color: vec4<f32>,
+    @location(2) norm: vec4<f32>,
 }
 
 struct Inter {
@@ -37,12 +37,12 @@ const SHININESS: f32= 512.0;
 @vertex
 fn vs_main(in: Input) -> Inter {
     // object space transformation
-    let transformed = vec4<f32>(in.position.xyz, 1.0) * (tran.scale * tran.rotation * tran.translation);
+    let transformed = in.position * (tran.scale * tran.rotation * tran.translation);
 
     var inter: Inter;
     inter.position = transformed * to_clip_space(uni.view);
-    inter.color = vec4<f32>(in.color, 1.0);
-    inter.surface_vector = vec4<f32>(in.norm, 1.0) * tran.rotation;
+    inter.color = in.color;
+    inter.surface_vector = in.norm * tran.rotation;
     inter.surface_light_vector = uni.light_position - transformed;
     inter.surface_eye_vector = uni.eye_position - transformed;
     return inter;

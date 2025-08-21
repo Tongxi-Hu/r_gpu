@@ -35,7 +35,7 @@ impl Scene {
     }
 }
 
-impl WithGPUBuffer<SIZE> for Scene {
+impl WithGPUBuffer for Scene {
     fn init_buffer(&mut self, device: &Device) -> &Buffer {
         self.buffer = Some(device.create_buffer_init(&BufferInitDescriptor {
             label: None,

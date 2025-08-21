@@ -3,15 +3,22 @@ use std::ops::{Add, Mul};
 use crate::math::algebra::common::FuzzyEq;
 
 #[derive(Debug, Clone, Copy)]
+#[repr(C)]
+
 pub struct Color {
     r: f32,
     g: f32,
     b: f32,
+    a: f32,
 }
+
+unsafe impl bytemuck::Zeroable for Color {}
+
+unsafe impl bytemuck::Pod for Color {}
 
 impl Color {
     pub fn rgb(r: f32, g: f32, b: f32) -> Self {
-        Self { r, g, b }
+        Self { r, g, b, a: 1.0 }
     }
     pub fn black() -> Self {
         Color::rgb(0.0, 0.0, 0.0)

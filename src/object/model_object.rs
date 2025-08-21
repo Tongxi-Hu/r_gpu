@@ -8,11 +8,24 @@ use wgpu::{
 };
 
 use crate::{
-    common::{Position, Rotation, Scale, Vertex, WithGPUBuffer},
-    math::algebra::matrix::Matrix,
+    common::WithGPUBuffer,
+    math::algebra::{common::Dimension4, matrix::Matrix, point::Point, vector::Vector},
+    physics::color::Color,
 };
 
 const SIZE: usize = 12;
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct Vertex {
+    pub position: Point,
+    pub color: Color,
+    pub normal: Vector,
+}
+
+unsafe impl bytemuck::Zeroable for Vertex {}
+
+unsafe impl bytemuck::Pod for Vertex {}
 
 pub struct ModelObject {
     pub vertex_data: Vec<Vertex>,
@@ -29,9 +42,9 @@ impl ModelObject {
             let position = model.vertices[i as usize].position;
             let normal = model.vertices[i as usize].normal;
             vertex_data.push(Vertex {
-                position,
-                color: [0.439, 0.329, 0.243],
-                normal,
+                position: Point::new(position[0], position[1], position[2], 1.0),
+                color: Color::rgb(0.439, 0.329, 0.243),
+                normal: Vector::new(normal[0], normal[1], normal[2], 0.0),
             });
         }
         Self {
@@ -43,7 +56,7 @@ impl ModelObject {
     }
 }
 
-impl WithGPUBuffer<SIZE> for ModelObject {
+impl WithGPUBuffer for ModelObject {
     fn init_buffer(&mut self, device: &Device) -> &Buffer {
         self.vertex_buffer = Some(device.create_buffer_init(&BufferInitDescriptor {
             label: None,
@@ -87,9 +100,9 @@ pub fn load_obj_model(path: &str) -> Result<obj::Obj, Box<dyn std::error::Error>
 pub fn generate_teapot() -> ModelObject {
     const PATH: &str = "src/object/asset/teapot.obj";
     // position info
-    const DEFAULT_SCALE: Scale = [100.0, 100.0, 100.0];
-    const DEFAULT_ROTATION: Rotation = [-90.0, 90.0, 0.0];
-    const DEFAULT_POSITION: Position = [0.0, -100.0, -1500.0];
+    const DEFAULT_SCALE: [f32; 3] = [100.0, 100.0, 100.0];
+    const DEFAULT_ROTATION: [f32; 3] = [-90.0, 90.0, 0.0];
+    const DEFAULT_POSITION: [f32; 3] = [0.0, -100.0, -1500.0];
 
     ModelObject::new(
         PATH,
@@ -113,17 +126,17 @@ pub fn create_vertex_buffer_layout() -> wgpu::VertexBufferLayout<'static> {
             wgpu::VertexAttribute {
                 offset: 0,
                 shader_location: 0,
-                format: wgpu::VertexFormat::Float32x3,
+                format: wgpu::VertexFormat::Float32x4,
             },
             wgpu::VertexAttribute {
-                offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
+                offset: std::mem::size_of::<[f32; 4]>() as wgpu::BufferAddress,
                 shader_location: 1,
-                format: wgpu::VertexFormat::Float32x3,
+                format: wgpu::VertexFormat::Float32x4,
             },
             wgpu::VertexAttribute {
-                offset: std::mem::size_of::<[f32; 6]>() as wgpu::BufferAddress,
+                offset: std::mem::size_of::<[f32; 8]>() as wgpu::BufferAddress,
                 shader_location: 2,
-                format: wgpu::VertexFormat::Float32x3,
+                format: wgpu::VertexFormat::Float32x4,
             },
         ],
     }
