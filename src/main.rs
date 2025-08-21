@@ -5,8 +5,8 @@ use crate::app::App;
 mod app;
 mod common;
 mod constant;
+mod content;
 mod math;
-mod object;
 mod physics;
 mod render;
 

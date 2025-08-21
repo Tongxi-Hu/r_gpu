@@ -5,7 +5,7 @@ use wgpu::{
 };
 use winit::dpi::PhysicalSize;
 
-use crate::object::WithGPUBuffer;
+use crate::content::WithGPUBuffer;
 
 // light position
 const DEFAULT_LIGHT_POSITION: [f32; 3] = [0.0, 2000.0, 0.0];

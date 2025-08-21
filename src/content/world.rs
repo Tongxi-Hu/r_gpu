@@ -7,12 +7,12 @@ use wgpu::Queue;
 use wgpu::RenderPass;
 use winit::dpi::PhysicalSize;
 
-use crate::math::algebra::matrix::Matrix;
-use crate::object::{
+use crate::content::{
     WithGPUBuffer,
     model_object::ModelObject,
     scene::{Scene, generate_scene},
 };
+use crate::math::algebra::matrix::Matrix;
 
 pub struct World {
     scene: Scene,

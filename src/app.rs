@@ -10,8 +10,8 @@ use winit::{
 };
 
 use crate::{
+    content::{model_object::generate_teapot, world::World},
     math::algebra::matrix::Matrix,
-    object::{model_object::generate_teapot, world::World},
     render::web_gpu::WebGpuContext,
 };
 
