@@ -13,8 +13,6 @@ use crate::{
     physics::color::Color,
 };
 
-const SIZE: usize = 12;
-
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct Vertex {
