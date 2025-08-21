@@ -96,7 +96,7 @@ pub fn load_obj_model(path: &str) -> Result<obj::Obj, Box<dyn std::error::Error>
 }
 
 pub fn generate_teapot() -> ModelObject {
-    const PATH: &str = "src/object/asset/teapot.obj";
+    const PATH: &str = "src/content/asset/teapot.obj";
     // position info
     const DEFAULT_SCALE: [f32; 3] = [100.0, 100.0, 100.0];
     const DEFAULT_ROTATION: [f32; 3] = [-90.0, 90.0, 0.0];
