@@ -8,7 +8,7 @@ use winit::dpi::PhysicalSize;
 use crate::common::WithGPUBuffer;
 
 // light position
-const DEFAULT_LIGHT_POSITION: [f32; 3] = [0.0, 0.0, 0.0];
+const DEFAULT_LIGHT_POSITION: [f32; 3] = [0.0, 2000.0, 0.0];
 // eye position
 const DEFAULT_EYE_POSITION: [f32; 3] = [0.0, 0.0, 0.0];
 
