@@ -7,9 +7,9 @@ use wgpu::Queue;
 use wgpu::RenderPass;
 use winit::dpi::PhysicalSize;
 
-use crate::common::WithGPUBuffer;
 use crate::math::algebra::matrix::Matrix;
 use crate::object::{
+    WithGPUBuffer,
     model_object::ModelObject,
     scene::{Scene, generate_scene},
 };

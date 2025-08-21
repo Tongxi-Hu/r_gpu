@@ -8,8 +8,8 @@ use wgpu::{
 };
 
 use crate::{
-    common::WithGPUBuffer,
     math::algebra::{common::Dimension4, matrix::Matrix, point::Point, vector::Vector},
+    object::WithGPUBuffer,
     physics::color::Color,
 };
 
