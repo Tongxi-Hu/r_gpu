@@ -10,8 +10,8 @@ use winit::{
 };
 
 use crate::{
-    object::{geometry::generate_teapot, world::World},
-    renderer::WebGpuContext,
+    object::{model_object::generate_teapot, world::World},
+    render::web_gpu::WebGpuContext,
 };
 
 const STEP: f32 = 10.0;

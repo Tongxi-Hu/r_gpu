@@ -10,7 +10,7 @@ use wgpu::{
 };
 use winit::{dpi::PhysicalSize, window::Window};
 
-use crate::{common::create_vertex_buffer_layout, object::world::World};
+use crate::{object::world::World, render::util::create_vertex_buffer_layout};
 
 const DEFAULT_MULTI_SAMPLE: u32 = 4;
 

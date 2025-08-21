@@ -4,8 +4,11 @@ use crate::app::App;
 
 mod app;
 mod common;
+mod constant;
+mod math;
 mod object;
-mod renderer;
+mod physics;
+mod render;
 
 fn main() -> Result<(), EventLoopError> {
     let event_loop = EventLoop::new().unwrap();

@@ -4,18 +4,21 @@ use wgpu::{
     util::{BufferInitDescriptor, DeviceExt},
 };
 
-use crate::common::{Position, Rotation, Scale, Vertex, WithGPUBuffer, load_obj_model};
+use crate::{
+    common::{Position, Rotation, Scale, Vertex, WithGPUBuffer},
+    object::util::load_obj_model,
+};
 
 const SIZE: usize = 12;
 
-pub struct Geometry {
+pub struct ModelObject {
     pub vertex_data: Vec<Vertex>,
     pub vertex_buffer: Option<Buffer>,
     pub position_data: [f32; SIZE],
     pub position_buffer: Option<Buffer>,
 }
 
-impl Geometry {
+impl ModelObject {
     pub fn new(path: &str, position_data: [f32; 12]) -> Self {
         let model = load_obj_model(path).unwrap();
         let mut vertex_data = vec![];
@@ -37,7 +40,7 @@ impl Geometry {
     }
 }
 
-impl WithGPUBuffer<SIZE> for Geometry {
+impl WithGPUBuffer<SIZE> for ModelObject {
     fn init_buffer(&mut self, device: &Device) -> &Buffer {
         self.vertex_buffer = Some(device.create_buffer_init(&BufferInitDescriptor {
             label: None,
@@ -62,7 +65,7 @@ impl WithGPUBuffer<SIZE> for Geometry {
     }
 }
 
-impl Geometry {
+impl ModelObject {
     pub fn move_obj(&mut self, move_info: [f32; 3]) {
         self.position_data[8] += move_info[0];
         self.position_data[9] += move_info[1];
@@ -76,14 +79,14 @@ impl Geometry {
     }
 }
 
-pub fn generate_teapot() -> Geometry {
+pub fn generate_teapot() -> ModelObject {
     const PATH: &str = "src/object/asset/teapot.obj";
     // position info
     const DEFAULT_SCALE: Scale = [100.0, 100.0, 100.0];
     const DEFAULT_ROTATION: Rotation = [-90.0, 90.0, 0.0];
     const DEFAULT_POSITION: Position = [0.0, -100.0, -1500.0];
 
-    Geometry::new(
+    ModelObject::new(
         PATH,
         [
             DEFAULT_SCALE[0],

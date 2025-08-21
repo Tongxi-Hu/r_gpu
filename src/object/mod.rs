@@ -1,4 +1,5 @@
 pub mod cube;
-pub mod geometry;
+pub mod model_object;
 pub mod scene;
+mod util;
 pub mod world;

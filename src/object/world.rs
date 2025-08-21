@@ -9,13 +9,13 @@ use winit::dpi::PhysicalSize;
 
 use crate::common::WithGPUBuffer;
 use crate::object::{
-    geometry::Geometry,
+    model_object::ModelObject,
     scene::{Scene, generate_scene},
 };
 
 pub struct World {
     scene: Scene,
-    geometries: HashMap<u32, Geometry>,
+    objects: HashMap<u32, ModelObject>,
     uniform_bind_group: Option<BindGroup>,
 }
 
@@ -23,35 +23,36 @@ impl World {
     pub fn new(screen_size: PhysicalSize<u32>) -> Self {
         Self {
             scene: generate_scene(screen_size),
-            geometries: HashMap::new(),
+            objects: HashMap::new(),
             uniform_bind_group: None,
         }
     }
+
     pub fn resize(&mut self, size: PhysicalSize<u32>) {
         self.scene.resize(size);
     }
 
-    pub fn add_geometry(&mut self, geo: Geometry) {
+    pub fn add_geometry(&mut self, model: ModelObject) {
         let mut rng = thread_rng();
         let id: u32 = rng.r#gen();
-        self.geometries.insert(id, geo);
+        self.objects.insert(id, model);
     }
 
     pub fn move_obj(&mut self, move_info: [f32; 3]) {
-        self.geometries.values_mut().for_each(|geo| {
-            geo.move_obj(move_info);
+        self.objects.values_mut().for_each(|model| {
+            model.move_obj(move_info);
         });
     }
 
     pub fn rotate_obj(&mut self, rotate_info: [f32; 3]) {
-        self.geometries.values_mut().for_each(|geo| {
+        self.objects.values_mut().for_each(|geo| {
             geo.rotate_obj(rotate_info);
         });
     }
 
     pub fn init_buffer(&mut self, device: &wgpu::Device, bind_group_layout: &BindGroupLayout) {
         self.scene.init_buffer(device);
-        self.geometries.values_mut().for_each(|geo| {
+        self.objects.values_mut().for_each(|geo| {
             geo.init_buffer(device);
         });
 
@@ -66,7 +67,7 @@ impl World {
                 wgpu::BindGroupEntry {
                     binding: 1,
                     resource: self
-                        .geometries
+                        .objects
                         .values()
                         .last()
                         .as_ref()
@@ -83,15 +84,15 @@ impl World {
 
     pub fn update_buffer(&mut self, queue: &Queue) {
         self.scene.update_buffer(queue);
-        self.geometries.values_mut().for_each(|geo| {
+        self.objects.values_mut().for_each(|geo| {
             geo.update_buffer(queue);
         });
     }
 
     pub fn set_pipeline(&self, render_pass: &mut RenderPass) {
-        let geometry = self.geometries.values().last().unwrap();
-        let vertex_buffer = geometry.vertex_buffer.as_ref().unwrap();
-        let vertex_data = &geometry.vertex_data;
+        let object = self.objects.values().last().unwrap();
+        let vertex_buffer = object.vertex_buffer.as_ref().unwrap();
+        let vertex_data = &object.vertex_data;
         render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         render_pass.set_bind_group(0, &self.uniform_bind_group, &[]);
         render_pass.draw(0..vertex_data.len() as u32, 0..1);
