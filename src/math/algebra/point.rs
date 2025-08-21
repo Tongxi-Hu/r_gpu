@@ -6,12 +6,17 @@ use super::{
 };
 
 #[derive(Debug, Copy, Clone)]
+#[repr(C)]
 pub struct Point {
     x: f32,
     y: f32,
     z: f32,
     w: f32,
 }
+
+unsafe impl bytemuck::Zeroable for Point {}
+
+unsafe impl bytemuck::Pod for Point {}
 
 impl Point {
     pub fn origin() -> Self {

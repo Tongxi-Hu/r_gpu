@@ -8,6 +8,7 @@ use wgpu::RenderPass;
 use winit::dpi::PhysicalSize;
 
 use crate::common::WithGPUBuffer;
+use crate::math::algebra::matrix::Matrix;
 use crate::object::{
     model_object::ModelObject,
     scene::{Scene, generate_scene},
@@ -38,15 +39,15 @@ impl World {
         self.objects.insert(id, model);
     }
 
-    pub fn move_obj(&mut self, move_info: [f32; 3]) {
+    pub fn move_obj(&mut self, translation: Matrix<4>) {
         self.objects.values_mut().for_each(|model| {
-            model.move_obj(move_info);
+            model.move_obj(translation);
         });
     }
 
-    pub fn rotate_obj(&mut self, rotate_info: [f32; 3]) {
+    pub fn rotate_obj(&mut self, rotation: Matrix<4>) {
         self.objects.values_mut().for_each(|geo| {
-            geo.rotate_obj(rotate_info);
+            geo.rotate_obj(rotation);
         });
     }
 
@@ -72,7 +73,7 @@ impl World {
                         .last()
                         .as_ref()
                         .unwrap()
-                        .position_buffer
+                        .uniform_buffer
                         .as_ref()
                         .unwrap()
                         .as_entire_binding(),

@@ -1,6 +1,3 @@
-use std::{fs::File, io::BufReader};
-
-use obj::load_obj;
 use wgpu::{Buffer, Device, Queue};
 
 pub type Color = [f32; 3];

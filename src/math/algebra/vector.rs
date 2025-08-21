@@ -5,12 +5,17 @@ use super::{
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Copy, Clone, Debug)]
+#[repr(C)]
 pub struct Vector {
     x: f32,
     y: f32,
     z: f32,
     w: f32,
 }
+
+unsafe impl bytemuck::Zeroable for Vector {}
+
+unsafe impl bytemuck::Pod for Vector {}
 
 impl Vector {
     pub fn vector(x: f32, y: f32, z: f32) -> Self {

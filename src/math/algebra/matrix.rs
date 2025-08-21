@@ -2,10 +2,15 @@ use std::ops::{Index, IndexMut, Mul};
 
 use super::common::{Determinant, Dimension4, FuzzyEq};
 
-#[derive(Debug, Clone, Copy)]
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
 pub struct Matrix<const D: usize> {
     data: [[f32; D]; D],
 }
+
+unsafe impl<const D: usize> bytemuck::Zeroable for Matrix<D> {}
+
+unsafe impl<const D: usize> bytemuck::Pod for Matrix<D> {}
 
 impl<const D: usize> Matrix<D> {
     pub fn new() -> Self {

@@ -10,6 +10,7 @@ use winit::{
 };
 
 use crate::{
+    math::algebra::matrix::Matrix,
     object::{model_object::generate_teapot, world::World},
     render::web_gpu::WebGpuContext,
 };
@@ -83,7 +84,7 @@ impl<'w> ApplicationHandler for App<'w> {
                 if let (MouseScrollDelta::PixelDelta(v), Some(world), Some(window)) =
                     (delta, self.world.as_mut(), self.window.as_mut())
                 {
-                    world.move_obj([v.x as f32, -v.y as f32, 0.0]);
+                    world.move_obj(Matrix::<4>::translation(v.x as f32, -v.y as f32, 0.0));
                     window.request_redraw();
                 }
             }
@@ -99,19 +100,19 @@ impl<'w> ApplicationHandler for App<'w> {
                 if let (Some(window), Some(world)) = (self.window.as_ref(), self.world.as_mut()) {
                     match (code, state) {
                         (KeyCode::KeyW, ElementState::Released) => {
-                            world.rotate_obj([-STEP, 0.0, 0.0]);
+                            world.rotate_obj(Matrix::<4>::rotate_x(-STEP));
                             window.request_redraw();
                         }
                         (KeyCode::KeyS, ElementState::Released) => {
-                            world.rotate_obj([STEP, 0.0, 0.0]);
+                            world.rotate_obj(Matrix::<4>::rotate_x(STEP));
                             window.request_redraw();
                         }
                         (KeyCode::KeyA, ElementState::Released) => {
-                            world.rotate_obj([0.0, -STEP, 0.0]);
+                            world.rotate_obj(Matrix::<4>::rotate_y(-STEP));
                             window.request_redraw();
                         }
                         (KeyCode::KeyD, ElementState::Released) => {
-                            world.rotate_obj([0.0, STEP, 0.0]);
+                            world.rotate_obj(Matrix::<4>::rotate_y(STEP));
                             window.request_redraw();
                         }
                         _ => {}
