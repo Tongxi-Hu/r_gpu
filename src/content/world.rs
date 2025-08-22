@@ -1,18 +1,12 @@
-use bytemuck::cast_slice;
 use rand::Rng;
 use rand::thread_rng;
 use std::collections::HashMap;
-use wgpu::Buffer;
-use wgpu::BufferUsages;
+use wgpu::BindGroupLayout;
 use wgpu::Device;
 use wgpu::Queue;
 use wgpu::RenderPass;
-use wgpu::util::BufferInitDescriptor;
-use wgpu::util::DeviceExt;
-use wgpu::{BindGroup, BindGroupLayout};
 use winit::dpi::PhysicalSize;
 
-use crate::content::scene::SCENE_SIZE;
 use crate::content::{
     WithGPUBuffer,
     model_object::ModelObject,
