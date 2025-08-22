@@ -10,7 +10,7 @@ use wgpu::{
 };
 use winit::{dpi::PhysicalSize, window::Window};
 
-use crate::content::{model_object::create_vertex_buffer_layout, world::World};
+use crate::content::{model_object::Vertex, world::World};
 
 const DEFAULT_MULTI_SAMPLE: u32 = 4;
 
@@ -226,6 +226,30 @@ impl<'w> WebGpuContext<'w> {
 
         self.queue.submit(Some(encoder.finish()));
         surface_texture.present();
+    }
+}
+
+fn create_vertex_buffer_layout() -> wgpu::VertexBufferLayout<'static> {
+    wgpu::VertexBufferLayout {
+        array_stride: size_of::<Vertex>() as wgpu::BufferAddress,
+        step_mode: wgpu::VertexStepMode::Vertex,
+        attributes: &[
+            wgpu::VertexAttribute {
+                offset: 0,
+                shader_location: 0,
+                format: wgpu::VertexFormat::Float32x4,
+            },
+            wgpu::VertexAttribute {
+                offset: size_of::<[f32; 4]>() as wgpu::BufferAddress,
+                shader_location: 1,
+                format: wgpu::VertexFormat::Float32x4,
+            },
+            wgpu::VertexAttribute {
+                offset: size_of::<[f32; 8]>() as wgpu::BufferAddress,
+                shader_location: 2,
+                format: wgpu::VertexFormat::Float32x4,
+            },
+        ],
     }
 }
 
