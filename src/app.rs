@@ -36,13 +36,11 @@ impl<'w> ApplicationHandler for App<'w> {
                     .create_window(window_attributes)
                     .expect("error create window"),
             );
+            let size = window.inner_size();
             let web_gpu_context = WebGpuContext::new(window.clone());
             self.web_gpu_context = Some(web_gpu_context);
             self.window = Some(window);
-            let mut world = World::new(PhysicalSize::<u32> {
-                width: 1600,
-                height: 1200,
-            });
+            let mut world = World::new(size);
             world.add_object(generate_ground());
             world.add_object(generate_teapot());
             world.init_buffer(
