@@ -1,4 +1,4 @@
-use wgpu::Device;
+use wgpu::{BindGroupLayout, Device, Queue};
 
 use crate::{
     math::algebra::{point::Point, vector::Vector},
@@ -10,7 +10,8 @@ pub mod scene;
 pub mod world;
 
 pub trait WithGPUBuffer {
-    fn init_buffer(&mut self, device: &Device);
+    fn init_buffer(&mut self, device: &Device, bind_group_layout: &BindGroupLayout);
+    fn update_buffer(&mut self, queue: &Queue);
 }
 
 #[repr(C)]

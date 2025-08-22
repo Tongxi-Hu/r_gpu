@@ -17,7 +17,7 @@ const DEFAULT_MULTI_SAMPLE: u32 = 4;
 pub struct WebGpuContext<'w> {
     pub device: Device,
     pub queue: Queue,
-    pub uniform_bind_group_layout: BindGroupLayout,
+    pub bind_group_layout: [BindGroupLayout; 2],
 
     surface: Surface<'w>,
     surface_config: SurfaceConfiguration,
@@ -90,36 +90,37 @@ impl<'w> WebGpuContext<'w> {
             view_formats: &[surface_config.format],
         });
 
-        let uniform_bind_group_layout =
-            device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-                label: None,
-                entries: &[
-                    BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: ShaderStages::VERTEX_FRAGMENT,
-                        ty: BindingType::Buffer {
-                            ty: BufferBindingType::Uniform,
-                            has_dynamic_offset: false,
-                            min_binding_size: None,
-                        },
-                        count: None,
-                    },
-                    BindGroupLayoutEntry {
-                        binding: 1,
-                        visibility: ShaderStages::VERTEX_FRAGMENT,
-                        ty: BindingType::Buffer {
-                            ty: BufferBindingType::Uniform,
-                            has_dynamic_offset: false,
-                            min_binding_size: None,
-                        },
-                        count: None,
-                    },
-                ],
-            });
+        let scene_bind_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+            label: None,
+            entries: &[BindGroupLayoutEntry {
+                binding: 0,
+                visibility: ShaderStages::VERTEX_FRAGMENT,
+                ty: BindingType::Buffer {
+                    ty: BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            }],
+        });
+
+        let model_bind_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+            label: None,
+            entries: &[BindGroupLayoutEntry {
+                binding: 0,
+                visibility: ShaderStages::VERTEX_FRAGMENT,
+                ty: BindingType::Buffer {
+                    ty: BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            }],
+        });
 
         let render_pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
             label: None,
-            bind_group_layouts: &[&uniform_bind_group_layout],
+            bind_group_layouts: &[&scene_bind_layout, &model_bind_layout],
             push_constant_ranges: &[],
         });
 
@@ -134,7 +135,7 @@ impl<'w> WebGpuContext<'w> {
             depth_texture,
             multi_sample_texture,
             render_pipeline,
-            uniform_bind_group_layout,
+            bind_group_layout: [scene_bind_layout, model_bind_layout],
         }
     }
 
@@ -221,7 +222,7 @@ impl<'w> WebGpuContext<'w> {
                 occlusion_query_set: None,
             });
             render_pass.set_pipeline(&self.render_pipeline);
-            world.set_pipeline(&mut render_pass, &self.queue)
+            world.set_pipeline(&mut render_pass)
         }
 
         self.queue.submit(Some(encoder.finish()));
@@ -261,7 +262,7 @@ fn create_pipeline(
     let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
         label: None,
         source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!(
-            "shader/cube.wgsl"
+            "shader/basic.wgsl"
         ))),
     });
     device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {

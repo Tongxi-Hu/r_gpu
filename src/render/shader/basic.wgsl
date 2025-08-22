@@ -27,7 +27,7 @@ struct Inter {
 @group(0) @binding(0)
 var<uniform> scene: Scene;
 
-@group(0) @binding(1)
+@group(1) @binding(0)
 var<uniform> tran: Transform;
 
 const PI: f32 = 3.141592653589793238462643;

@@ -4,6 +4,8 @@ use rand::thread_rng;
 use std::collections::HashMap;
 use wgpu::Buffer;
 use wgpu::BufferUsages;
+use wgpu::Device;
+use wgpu::Queue;
 use wgpu::RenderPass;
 use wgpu::util::BufferInitDescriptor;
 use wgpu::util::DeviceExt;
@@ -21,9 +23,6 @@ use crate::math::algebra::matrix::Matrix;
 pub struct World {
     scene: Scene,
     objects: HashMap<u32, ModelObject>,
-    scene_buffer: Option<Buffer>,
-    transform_buffer: Option<Buffer>,
-    uniform_bind_group: Option<BindGroup>,
 }
 
 impl World {
@@ -31,9 +30,6 @@ impl World {
         Self {
             scene: generate_scene(screen_size),
             objects: HashMap::new(),
-            scene_buffer: None,
-            transform_buffer: None,
-            uniform_bind_group: None,
         }
     }
 
@@ -59,53 +55,24 @@ impl World {
         });
     }
 
-    pub fn init_buffer(&mut self, device: &wgpu::Device, bind_group_layout: &BindGroupLayout) {
+    pub fn init_buffer(&mut self, device: &Device, bind_group_layout: &[BindGroupLayout; 2]) {
+        self.scene.init_buffer(device, &bind_group_layout[0]);
         self.objects.values_mut().for_each(|obj| {
-            obj.init_buffer(device);
+            obj.init_buffer(device, &bind_group_layout[1]);
         });
-
-        self.scene_buffer = Some(device.create_buffer_init(&BufferInitDescriptor {
-            label: None,
-            contents: cast_slice(&[1.0_f32; SCENE_SIZE]),
-            usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST,
-        }));
-        self.transform_buffer = Some(device.create_buffer_init(&BufferInitDescriptor {
-            label: None,
-            contents: cast_slice(&[Matrix::<4>::identity(); 3]),
-            usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST,
-        }));
-
-        let uniform_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: None,
-            layout: &bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: self.scene_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: self.transform_buffer.as_ref().unwrap().as_entire_binding(),
-                },
-            ],
-        });
-        self.uniform_bind_group = Some(uniform_bind_group);
     }
 
-    pub fn set_pipeline(&self, render_pass: &mut RenderPass, queue: &wgpu::Queue) {
-        queue.write_buffer(
-            self.scene_buffer.as_ref().unwrap(),
-            0,
-            cast_slice(&self.scene.scene_data),
-        );
+    pub fn update_buffer(&mut self, queue: &Queue) {
+        self.scene.update_buffer(queue);
+        self.objects.values_mut().for_each(|obj| {
+            obj.update_buffer(queue);
+        });
+    }
 
+    pub fn set_pipeline(&self, render_pass: &mut RenderPass) {
+        render_pass.set_bind_group(0, self.scene.scene_bind_group.as_ref().unwrap(), &[]);
         self.objects.values().for_each(|object| {
-            queue.write_buffer(
-                self.transform_buffer.as_ref().unwrap(),
-                0,
-                cast_slice(&object.transform),
-            );
-            render_pass.set_bind_group(0, self.uniform_bind_group.as_ref().unwrap(), &[]);
+            render_pass.set_bind_group(1, object.transform_bind_group.as_ref().unwrap(), &[]);
             render_pass.set_vertex_buffer(0, object.vertex_buffer.as_ref().unwrap().slice(..));
             render_pass.draw(0..object.vertex_data.len() as u32, 0..1);
         });

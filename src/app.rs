@@ -47,11 +47,7 @@ impl<'w> ApplicationHandler for App<'w> {
             world.add_object(generate_teapot());
             world.init_buffer(
                 &self.web_gpu_context.as_ref().unwrap().device,
-                &self
-                    .web_gpu_context
-                    .as_ref()
-                    .unwrap()
-                    .uniform_bind_group_layout,
+                &self.web_gpu_context.as_ref().unwrap().bind_group_layout,
             );
             self.world = Some(world);
         }
@@ -80,6 +76,7 @@ impl<'w> ApplicationHandler for App<'w> {
                 if let (Some(world), Some(web_gpu_context)) =
                     (self.world.as_mut(), self.web_gpu_context.as_mut())
                 {
+                    world.update_buffer(&web_gpu_context.queue);
                     web_gpu_context.draw(world);
                 }
             }

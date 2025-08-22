@@ -3,7 +3,7 @@ use std::{fs::File, io::BufReader};
 use bytemuck::cast_slice;
 use obj::load_obj;
 use wgpu::{
-    Buffer, BufferUsages, Device,
+    BindGroup, BindGroupLayout, Buffer, BufferUsages, Device, Queue,
     util::{BufferInitDescriptor, DeviceExt},
 };
 
@@ -17,6 +17,8 @@ pub struct ModelObject {
     pub vertex_data: Vec<Vertex>,
     pub vertex_buffer: Option<Buffer>,
     pub transform: [Matrix<4>; 3],
+    pub transform_buffer: Option<Buffer>,
+    pub transform_bind_group: Option<BindGroup>,
 }
 
 impl ModelObject {
@@ -30,17 +32,42 @@ impl ModelObject {
             vertex_data,
             vertex_buffer: None,
             transform: [scale, rotation, translation],
+            transform_buffer: None,
+            transform_bind_group: None,
         }
     }
 }
 
 impl WithGPUBuffer for ModelObject {
-    fn init_buffer(&mut self, device: &Device) {
+    fn init_buffer(&mut self, device: &Device, bind_group_layout: &BindGroupLayout) {
         self.vertex_buffer = Some(device.create_buffer_init(&BufferInitDescriptor {
             label: None,
             contents: cast_slice(&self.vertex_data),
             usage: BufferUsages::VERTEX,
         }));
+
+        self.transform_buffer = Some(device.create_buffer_init(&BufferInitDescriptor {
+            label: None,
+            contents: cast_slice(&self.transform),
+            usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST,
+        }));
+
+        self.transform_bind_group = Some(device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: None,
+            layout: &bind_group_layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: self.transform_buffer.as_ref().unwrap().as_entire_binding(),
+            }],
+        }));
+    }
+
+    fn update_buffer(&mut self, queue: &Queue) {
+        queue.write_buffer(
+            self.transform_buffer.as_ref().unwrap(),
+            0,
+            cast_slice(&self.transform),
+        );
     }
 }
 
@@ -77,7 +104,7 @@ pub fn generate_teapot() -> ModelObject {
 
     // position info
     let scale: [f32; 3] = [100.0, 100.0, 100.0];
-    let rotation: [f32; 3] = [-90.0, 0.0, 0.0];
+    let rotation: [f32; 3] = [-90.0, 90.0, 0.0];
     let position: [f32; 3] = [0.0, -100.0, -2000.0];
 
     ModelObject::new(
@@ -127,7 +154,7 @@ pub fn generate_ground() -> ModelObject {
     // position info
     let scale: [f32; 3] = [1.0, 1.0, 1.0];
     let rotation: [f32; 3] = [0.0, 0.0, 0.0];
-    let position: [f32; 3] = [0.0, -5000.0, -2000.0];
+    let position: [f32; 3] = [0.0, -1000.0, -2000.0];
 
     ModelObject::new(
         vertex_data,
