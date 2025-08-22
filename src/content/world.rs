@@ -4,7 +4,6 @@ use rand::thread_rng;
 use std::collections::HashMap;
 use wgpu::Buffer;
 use wgpu::BufferUsages;
-use wgpu::Queue;
 use wgpu::RenderPass;
 use wgpu::util::BufferInitDescriptor;
 use wgpu::util::DeviceExt;

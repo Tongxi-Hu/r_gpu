@@ -1,4 +1,4 @@
-use wgpu::{Buffer, Device, Queue};
+use wgpu::Device;
 
 use crate::{
     math::algebra::{point::Point, vector::Vector},
