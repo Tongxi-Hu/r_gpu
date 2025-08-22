@@ -8,74 +8,39 @@ use wgpu::{
 };
 
 use crate::{
-    content::WithGPUBuffer,
-    math::algebra::{common::Dimension4, matrix::Matrix, point::Point, vector::Vector},
+    content::{Vertex, WithGPUBuffer},
+    math::algebra::{matrix::Matrix, point::Point, vector::Vector},
     physics::color::Color,
 };
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
-pub struct Vertex {
-    pub position: Point,
-    pub color: Color,
-    pub normal: Vector,
-}
-
-unsafe impl bytemuck::Zeroable for Vertex {}
-
-unsafe impl bytemuck::Pod for Vertex {}
 
 pub struct ModelObject {
     pub vertex_data: Vec<Vertex>,
     pub vertex_buffer: Option<Buffer>,
-    transform: [Matrix<4>; 3],
-    pub uniform_buffer: Option<Buffer>,
+    pub transform: [Matrix<4>; 3],
 }
 
 impl ModelObject {
-    pub fn new(path: &str, scale: Matrix<4>, rotation: Matrix<4>, translation: Matrix<4>) -> Self {
-        let model = load_obj_model(path).unwrap();
-        let mut vertex_data = vec![];
-        for i in model.indices {
-            let position = model.vertices[i as usize].position;
-            let normal = model.vertices[i as usize].normal;
-            vertex_data.push(Vertex {
-                position: Point::new(position[0], position[1], position[2], 1.0),
-                color: Color::rgb(0.439, 0.329, 0.243),
-                normal: Vector::new(normal[0], normal[1], normal[2], 0.0),
-            });
-        }
+    pub fn new(
+        vertex_data: Vec<Vertex>,
+        scale: Matrix<4>,
+        rotation: Matrix<4>,
+        translation: Matrix<4>,
+    ) -> Self {
         Self {
             vertex_data,
             vertex_buffer: None,
             transform: [scale, rotation, translation],
-            uniform_buffer: None,
         }
     }
 }
 
 impl WithGPUBuffer for ModelObject {
-    fn init_buffer(&mut self, device: &Device) -> &Buffer {
+    fn init_buffer(&mut self, device: &Device) {
         self.vertex_buffer = Some(device.create_buffer_init(&BufferInitDescriptor {
             label: None,
             contents: cast_slice(&self.vertex_data),
             usage: BufferUsages::VERTEX,
         }));
-
-        self.uniform_buffer = Some(device.create_buffer_init(&BufferInitDescriptor {
-            label: None,
-            contents: cast_slice(&self.transform),
-            usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST,
-        }));
-        &self.uniform_buffer.as_ref().unwrap()
-    }
-
-    fn update_buffer(&mut self, queue: &wgpu::Queue) {
-        queue.write_buffer(
-            &self.uniform_buffer.as_ref().unwrap(),
-            0,
-            cast_slice(&self.transform),
-        );
     }
 }
 
@@ -97,21 +62,79 @@ pub fn load_obj_model(path: &str) -> Result<obj::Obj, Box<dyn std::error::Error>
 
 pub fn generate_teapot() -> ModelObject {
     const PATH: &str = "src/content/asset/teapot.obj";
+
+    let model = load_obj_model(PATH).unwrap();
+    let mut vertex_data = vec![];
+    for i in model.indices {
+        let position = model.vertices[i as usize].position;
+        let normal = model.vertices[i as usize].normal;
+        vertex_data.push(Vertex {
+            position: Point::point(position[0], position[1], position[2]),
+            color: Color::rgb(0.439, 0.329, 0.243),
+            normal: Vector::vector(normal[0], normal[1], normal[2]),
+        });
+    }
+
     // position info
-    const DEFAULT_SCALE: [f32; 3] = [100.0, 100.0, 100.0];
-    const DEFAULT_ROTATION: [f32; 3] = [-90.0, 90.0, 0.0];
-    const DEFAULT_POSITION: [f32; 3] = [0.0, -100.0, -1500.0];
+    let scale: [f32; 3] = [100.0, 100.0, 100.0];
+    let rotation: [f32; 3] = [-90.0, 0.0, 0.0];
+    let position: [f32; 3] = [0.0, -100.0, -2000.0];
 
     ModelObject::new(
-        PATH,
-        Matrix::<4>::scale(DEFAULT_SCALE[0], DEFAULT_SCALE[1], DEFAULT_SCALE[2]),
-        Matrix::<4>::rotate_z(DEFAULT_ROTATION[2])
-            * Matrix::<4>::rotate_y(DEFAULT_ROTATION[1])
-            * Matrix::<4>::rotate_x(DEFAULT_ROTATION[0]),
-        Matrix::<4>::translation(
-            DEFAULT_POSITION[0],
-            DEFAULT_POSITION[1],
-            DEFAULT_POSITION[2],
-        ),
+        vertex_data,
+        Matrix::<4>::scale(scale[0], scale[1], scale[2]),
+        Matrix::<4>::rotate_z(rotation[2])
+            * Matrix::<4>::rotate_y(rotation[1])
+            * Matrix::<4>::rotate_x(rotation[0]),
+        Matrix::<4>::translation(position[0], position[1], position[2]),
+    )
+}
+
+pub fn generate_ground() -> ModelObject {
+    let vertex_data: Vec<Vertex> = vec![
+        Vertex {
+            position: Point::point(5000.0, 0.0, 5000.0),
+            color: Color::rgb(1.0, 1.0, 1.0),
+            normal: Vector::unit_y(),
+        },
+        Vertex {
+            position: Point::point(5000.0, 0.0, -5000.0),
+            color: Color::rgb(1.0, 1.0, 1.0),
+            normal: Vector::unit_y(),
+        },
+        Vertex {
+            position: Point::point(-5000.0, 0.0, 5000.0),
+            color: Color::rgb(1.0, 1.0, 1.0),
+            normal: Vector::unit_y(),
+        },
+        Vertex {
+            position: Point::point(-5000.0, 0.0, -5000.0),
+            color: Color::rgb(1.0, 1.0, 1.0),
+            normal: Vector::unit_y(),
+        },
+        Vertex {
+            position: Point::point(-5000.0, 0.0, 5000.0),
+            color: Color::rgb(1.0, 1.0, 1.0),
+            normal: Vector::unit_y(),
+        },
+        Vertex {
+            position: Point::point(5000.0, 0.0, -5000.0),
+            color: Color::rgb(1.0, 1.0, 1.0),
+            normal: Vector::unit_y(),
+        },
+    ];
+
+    // position info
+    let scale: [f32; 3] = [1.0, 1.0, 1.0];
+    let rotation: [f32; 3] = [0.0, 0.0, 0.0];
+    let position: [f32; 3] = [0.0, -5000.0, -2000.0];
+
+    ModelObject::new(
+        vertex_data,
+        Matrix::<4>::scale(scale[0], scale[1], scale[2]),
+        Matrix::<4>::rotate_z(rotation[2])
+            * Matrix::<4>::rotate_y(rotation[1])
+            * Matrix::<4>::rotate_x(rotation[0]),
+        Matrix::<4>::translation(position[0], position[1], position[2]),
     )
 }

@@ -1,12 +1,17 @@
+use bytemuck::cast_slice;
 use rand::Rng;
 use rand::thread_rng;
 use std::collections::HashMap;
-use wgpu::BindGroup;
-use wgpu::BindGroupLayout;
+use wgpu::Buffer;
+use wgpu::BufferUsages;
 use wgpu::Queue;
 use wgpu::RenderPass;
+use wgpu::util::BufferInitDescriptor;
+use wgpu::util::DeviceExt;
+use wgpu::{BindGroup, BindGroupLayout};
 use winit::dpi::PhysicalSize;
 
+use crate::content::scene::SCENE_SIZE;
 use crate::content::{
     WithGPUBuffer,
     model_object::ModelObject,
@@ -17,6 +22,8 @@ use crate::math::algebra::matrix::Matrix;
 pub struct World {
     scene: Scene,
     objects: HashMap<u32, ModelObject>,
+    scene_buffer: Option<Buffer>,
+    transform_buffer: Option<Buffer>,
     uniform_bind_group: Option<BindGroup>,
 }
 
@@ -25,6 +32,8 @@ impl World {
         Self {
             scene: generate_scene(screen_size),
             objects: HashMap::new(),
+            scene_buffer: None,
+            transform_buffer: None,
             uniform_bind_group: None,
         }
     }
@@ -33,7 +42,7 @@ impl World {
         self.scene.resize(size);
     }
 
-    pub fn add_geometry(&mut self, model: ModelObject) {
+    pub fn add_object(&mut self, model: ModelObject) {
         let mut rng = thread_rng();
         let id: u32 = rng.r#gen();
         self.objects.insert(id, model);
@@ -52,10 +61,20 @@ impl World {
     }
 
     pub fn init_buffer(&mut self, device: &wgpu::Device, bind_group_layout: &BindGroupLayout) {
-        self.scene.init_buffer(device);
-        self.objects.values_mut().for_each(|geo| {
-            geo.init_buffer(device);
+        self.objects.values_mut().for_each(|obj| {
+            obj.init_buffer(device);
         });
+
+        self.scene_buffer = Some(device.create_buffer_init(&BufferInitDescriptor {
+            label: None,
+            contents: cast_slice(&[1.0_f32; SCENE_SIZE]),
+            usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST,
+        }));
+        self.transform_buffer = Some(device.create_buffer_init(&BufferInitDescriptor {
+            label: None,
+            contents: cast_slice(&[Matrix::<4>::identity(); 3]),
+            usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST,
+        }));
 
         let uniform_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: None,
@@ -63,39 +82,33 @@ impl World {
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
-                    resource: self.scene.buffer.as_ref().unwrap().as_entire_binding(),
+                    resource: self.scene_buffer.as_ref().unwrap().as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: self
-                        .objects
-                        .values()
-                        .last()
-                        .as_ref()
-                        .unwrap()
-                        .uniform_buffer
-                        .as_ref()
-                        .unwrap()
-                        .as_entire_binding(),
+                    resource: self.transform_buffer.as_ref().unwrap().as_entire_binding(),
                 },
             ],
         });
         self.uniform_bind_group = Some(uniform_bind_group);
     }
 
-    pub fn update_buffer(&mut self, queue: &Queue) {
-        self.scene.update_buffer(queue);
-        self.objects.values_mut().for_each(|geo| {
-            geo.update_buffer(queue);
-        });
-    }
+    pub fn set_pipeline(&self, render_pass: &mut RenderPass, queue: &wgpu::Queue) {
+        queue.write_buffer(
+            self.scene_buffer.as_ref().unwrap(),
+            0,
+            cast_slice(&self.scene.scene_data),
+        );
 
-    pub fn set_pipeline(&self, render_pass: &mut RenderPass) {
-        let object = self.objects.values().last().unwrap();
-        let vertex_buffer = object.vertex_buffer.as_ref().unwrap();
-        let vertex_data = &object.vertex_data;
-        render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
-        render_pass.set_bind_group(0, &self.uniform_bind_group, &[]);
-        render_pass.draw(0..vertex_data.len() as u32, 0..1);
+        self.objects.values().for_each(|object| {
+            queue.write_buffer(
+                self.transform_buffer.as_ref().unwrap(),
+                0,
+                cast_slice(&object.transform),
+            );
+            render_pass.set_bind_group(0, self.uniform_bind_group.as_ref().unwrap(), &[]);
+            render_pass.set_vertex_buffer(0, object.vertex_buffer.as_ref().unwrap().slice(..));
+            render_pass.draw(0..object.vertex_data.len() as u32, 0..1);
+        });
     }
 }

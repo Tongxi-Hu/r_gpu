@@ -10,7 +10,7 @@ use wgpu::{
 };
 use winit::{dpi::PhysicalSize, window::Window};
 
-use crate::content::{model_object::Vertex, world::World};
+use crate::content::{Vertex, world::World};
 
 const DEFAULT_MULTI_SAMPLE: u32 = 4;
 
@@ -221,7 +221,7 @@ impl<'w> WebGpuContext<'w> {
                 occlusion_query_set: None,
             });
             render_pass.set_pipeline(&self.render_pipeline);
-            world.set_pipeline(&mut render_pass)
+            world.set_pipeline(&mut render_pass, &self.queue)
         }
 
         self.queue.submit(Some(encoder.finish()));

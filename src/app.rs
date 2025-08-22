@@ -10,7 +10,10 @@ use winit::{
 };
 
 use crate::{
-    content::{model_object::generate_teapot, world::World},
+    content::{
+        model_object::{generate_ground, generate_teapot},
+        world::World,
+    },
     math::algebra::matrix::Matrix,
     render::web_gpu::WebGpuContext,
 };
@@ -40,7 +43,8 @@ impl<'w> ApplicationHandler for App<'w> {
                 width: 1600,
                 height: 1200,
             });
-            world.add_geometry(generate_teapot());
+            world.add_object(generate_ground());
+            world.add_object(generate_teapot());
             world.init_buffer(
                 &self.web_gpu_context.as_ref().unwrap().device,
                 &self
@@ -76,7 +80,6 @@ impl<'w> ApplicationHandler for App<'w> {
                 if let (Some(world), Some(web_gpu_context)) =
                     (self.world.as_mut(), self.web_gpu_context.as_mut())
                 {
-                    world.update_buffer(&web_gpu_context.queue);
                     web_gpu_context.draw(world);
                 }
             }

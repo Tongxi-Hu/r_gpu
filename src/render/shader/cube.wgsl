@@ -1,4 +1,4 @@
-struct Uniform {
+struct Scene {
     view: vec4<f32>,
     light_position: vec4<f32>,
     eye_position: vec4<f32>,
@@ -25,7 +25,7 @@ struct Inter {
 }
 
 @group(0) @binding(0)
-var<uniform> uni: Uniform;
+var<uniform> scene: Scene;
 
 @group(0) @binding(1)
 var<uniform> tran: Transform;
@@ -40,11 +40,11 @@ fn vs_main(in: Input) -> Inter {
     let transformed = in.position * (tran.scale * tran.rotation * tran.translation);
 
     var inter: Inter;
-    inter.position = transformed * to_clip_space(uni.view);
+    inter.position = transformed * to_clip_space(scene.view);
     inter.color = in.color;
     inter.surface_vector = in.norm * tran.rotation;
-    inter.surface_light_vector = uni.light_position - transformed;
-    inter.surface_eye_vector = uni.eye_position - transformed;
+    inter.surface_light_vector = scene.light_position - transformed;
+    inter.surface_eye_vector = scene.eye_position - transformed;
     return inter;
 }
 
