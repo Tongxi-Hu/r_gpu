@@ -49,26 +49,30 @@ impl World {
         });
     }
 
-    pub fn init_buffer(&mut self, device: &Device, bind_group_layout: &[BindGroupLayout; 2]) {
-        self.scene.init_buffer(device, &bind_group_layout[0]);
-        self.objects.values_mut().for_each(|obj| {
-            obj.init_buffer(device, &bind_group_layout[1]);
-        });
-    }
-
-    pub fn update_buffer(&mut self, queue: &Queue) {
-        self.scene.update_buffer(queue);
-        self.objects.values_mut().for_each(|obj| {
-            obj.update_buffer(queue);
-        });
-    }
-
     pub fn set_pipeline(&self, render_pass: &mut RenderPass) {
         render_pass.set_bind_group(0, self.scene.scene_bind_group.as_ref().unwrap(), &[]);
         self.objects.values().for_each(|object| {
             render_pass.set_bind_group(1, object.transform_bind_group.as_ref().unwrap(), &[]);
             render_pass.set_vertex_buffer(0, object.vertex_buffer.as_ref().unwrap().slice(..));
             render_pass.draw(0..object.vertex_data.len() as u32, 0..1);
+        });
+    }
+}
+
+impl WithGPUBuffer for World {
+    fn init_buffer(&mut self, device: &Device, bind_group_layout: &[BindGroupLayout]) {
+        self.scene.init_buffer(device, &bind_group_layout[0..=0]);
+        if bind_group_layout.len() == 2 {
+            self.objects.values_mut().for_each(|obj| {
+                obj.init_buffer(device, &bind_group_layout[1..=1]);
+            });
+        }
+    }
+
+    fn update_buffer(&mut self, queue: &Queue) {
+        self.scene.update_buffer(queue);
+        self.objects.values_mut().for_each(|obj| {
+            obj.update_buffer(queue);
         });
     }
 }

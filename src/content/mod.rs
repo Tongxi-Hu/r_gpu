@@ -10,7 +10,7 @@ pub mod scene;
 pub mod world;
 
 pub trait WithGPUBuffer {
-    fn init_buffer(&mut self, device: &Device, bind_group_layout: &BindGroupLayout);
+    fn init_buffer(&mut self, device: &Device, bind_group_layout: &[BindGroupLayout]);
     fn update_buffer(&mut self, queue: &Queue);
 }
 

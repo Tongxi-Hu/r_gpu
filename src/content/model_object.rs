@@ -39,7 +39,7 @@ impl ModelObject {
 }
 
 impl WithGPUBuffer for ModelObject {
-    fn init_buffer(&mut self, device: &Device, bind_group_layout: &BindGroupLayout) {
+    fn init_buffer(&mut self, device: &Device, bind_group_layout: &[BindGroupLayout]) {
         self.vertex_buffer = Some(device.create_buffer_init(&BufferInitDescriptor {
             label: None,
             contents: cast_slice(&self.vertex_data),
@@ -54,7 +54,7 @@ impl WithGPUBuffer for ModelObject {
 
         self.transform_bind_group = Some(device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: None,
-            layout: &bind_group_layout,
+            layout: &bind_group_layout[0],
             entries: &[wgpu::BindGroupEntry {
                 binding: 0,
                 resource: self.transform_buffer.as_ref().unwrap().as_entire_binding(),

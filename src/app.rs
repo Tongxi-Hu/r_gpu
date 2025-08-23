@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use winit::{
     application::ApplicationHandler,
-    dpi::PhysicalSize,
     event::{ElementState, KeyEvent, MouseScrollDelta, WindowEvent},
     event_loop::ActiveEventLoop,
     keyboard::{KeyCode, PhysicalKey},
@@ -11,6 +10,7 @@ use winit::{
 
 use crate::{
     content::{
+        WithGPUBuffer,
         model_object::{generate_ground, generate_teapot},
         world::World,
     },
