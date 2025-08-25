@@ -85,7 +85,7 @@ pub fn generate_scene(size: PhysicalSize<u32>) -> Scene {
     let near: f32 = -1000.0;
     let far: f32 = -20000.0;
     // light
-    let light_position: [f32; 3] = [0.0, 500.0, -2000.0];
+    let light_position: [f32; 3] = [0.0, 1000.0, -800.0];
     let light_direction: [f32; 3] = [0.0, 0.0, -1.0];
     // eye
     let eye_position: [f32; 3] = [0.0, 0.0, 0.0];
