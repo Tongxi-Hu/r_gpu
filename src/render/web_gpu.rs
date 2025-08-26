@@ -6,7 +6,7 @@ use wgpu::{
     Features, FeaturesWGPU, FeaturesWebGPU, Instance, Limits, MemoryHints,
     PipelineLayoutDescriptor, PowerPreference, Queue, RenderPipeline, RequestAdapterOptions,
     ShaderStages, Surface, SurfaceConfiguration, Texture, TextureDescriptor, TextureDimension,
-    TextureFormat, TextureUsages, Trace,
+    TextureFormat, TextureUsages, TextureView, Trace,
 };
 use winit::{dpi::PhysicalSize, window::Window};
 
@@ -22,8 +22,9 @@ pub struct WebGpuContext<'w> {
     surface: Surface<'w>,
     surface_config: SurfaceConfiguration,
     render_pipeline: RenderPipeline,
-    depth_texture: Texture,
-    multi_sample_texture: Texture,
+    depth_view: TextureView,
+    color_view: TextureView,
+    resolve_target_view: TextureView,
 }
 
 impl<'w> WebGpuContext<'w> {
@@ -74,6 +75,7 @@ impl<'w> WebGpuContext<'w> {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             view_formats: &[wgpu::TextureFormat::Depth32FloatStencil8],
         });
+        let depth_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         let multi_sample_texture = device.create_texture(&TextureDescriptor {
             label: None,
@@ -89,6 +91,16 @@ impl<'w> WebGpuContext<'w> {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             view_formats: &[surface_config.format],
         });
+
+        let color_view = multi_sample_texture.create_view(&wgpu::TextureViewDescriptor::default());
+
+        let resolve_target_texture = surface
+            .get_current_texture()
+            .expect("Failed to acquire next texture");
+
+        let resolve_target_view = resolve_target_texture
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
 
         let scene_bind_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
             label: None,
@@ -132,8 +144,9 @@ impl<'w> WebGpuContext<'w> {
             surface_config,
             device,
             queue,
-            depth_texture,
-            multi_sample_texture,
+            depth_view,
+            color_view,
+            resolve_target_view,
             render_pipeline,
             bind_group_layout: [scene_bind_layout, model_bind_layout],
         }
@@ -148,35 +161,41 @@ impl<'w> WebGpuContext<'w> {
         self.surface_config.height = size.height.max(1);
         self.surface.configure(&self.device, &self.surface_config);
 
-        self.depth_texture = self.device.create_texture(&TextureDescriptor {
-            label: None,
-            size: Extent3d {
-                width: self.surface_config.width.max(1),
-                height: self.surface_config.height.max(1),
-                depth_or_array_layers: 1,
-            },
-            mip_level_count: 1,
-            sample_count: DEFAULT_MULTI_SAMPLE,
-            dimension: TextureDimension::D2,
-            format: TextureFormat::Depth32FloatStencil8,
-            usage: TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[TextureFormat::Depth32FloatStencil8],
-        });
+        self.depth_view = self
+            .device
+            .create_texture(&TextureDescriptor {
+                label: None,
+                size: Extent3d {
+                    width: self.surface_config.width.max(1),
+                    height: self.surface_config.height.max(1),
+                    depth_or_array_layers: 1,
+                },
+                mip_level_count: 1,
+                sample_count: DEFAULT_MULTI_SAMPLE,
+                dimension: TextureDimension::D2,
+                format: TextureFormat::Depth32FloatStencil8,
+                usage: TextureUsages::RENDER_ATTACHMENT,
+                view_formats: &[TextureFormat::Depth32FloatStencil8],
+            })
+            .create_view(&wgpu::TextureViewDescriptor::default());
 
-        self.multi_sample_texture = self.device.create_texture(&TextureDescriptor {
-            label: None,
-            size: wgpu::Extent3d {
-                width: self.surface_config.width.max(1),
-                height: self.surface_config.height.max(1),
-                depth_or_array_layers: 1,
-            },
-            mip_level_count: 1,
-            sample_count: DEFAULT_MULTI_SAMPLE,
-            dimension: wgpu::TextureDimension::D2,
-            format: self.surface_config.format,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[self.surface_config.format],
-        });
+        self.color_view = self
+            .device
+            .create_texture(&TextureDescriptor {
+                label: None,
+                size: wgpu::Extent3d {
+                    width: self.surface_config.width.max(1),
+                    height: self.surface_config.height.max(1),
+                    depth_or_array_layers: 1,
+                },
+                mip_level_count: 1,
+                sample_count: DEFAULT_MULTI_SAMPLE,
+                dimension: wgpu::TextureDimension::D2,
+                format: self.surface_config.format,
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                view_formats: &[self.surface_config.format],
+            })
+            .create_view(&wgpu::TextureViewDescriptor::default());
     }
     pub fn draw(&mut self, world: &World) {
         let mut encoder = self
@@ -192,9 +211,7 @@ impl<'w> WebGpuContext<'w> {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &self
-                        .multi_sample_texture
-                        .create_view(&wgpu::TextureViewDescriptor::default()),
+                    view: &self.color_view,
                     resolve_target: Some(
                         &surface_texture
                             .texture
@@ -206,9 +223,7 @@ impl<'w> WebGpuContext<'w> {
                     },
                 })],
                 depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                    view: &self
-                        .depth_texture
-                        .create_view(&wgpu::TextureViewDescriptor::default()),
+                    view: &self.depth_view,
                     depth_ops: Some(wgpu::Operations {
                         load: wgpu::LoadOp::Clear(1.0),
                         store: wgpu::StoreOp::Store,
