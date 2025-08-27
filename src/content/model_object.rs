@@ -105,7 +105,7 @@ pub fn generate_teapot() -> ModelObject {
     // position info
     let scale: [f32; 3] = [100.0, 100.0, 100.0];
     let rotation: [f32; 3] = [-90.0, 90.0, 0.0];
-    let position: [f32; 3] = [0.0, -100.0, -2000.0];
+    let position: [f32; 3] = [0.0, -100.0, -1000.0];
 
     ModelObject::new(
         vertex_data,
@@ -154,7 +154,7 @@ pub fn generate_ground() -> ModelObject {
     // position info
     let scale: [f32; 3] = [1.0, 1.0, 1.0];
     let rotation: [f32; 3] = [0.0, 0.0, 0.0];
-    let position: [f32; 3] = [0.0, -1000.0, -2000.0];
+    let position: [f32; 3] = [0.0, -1000.0, -1000.0];
 
     ModelObject::new(
         vertex_data,
