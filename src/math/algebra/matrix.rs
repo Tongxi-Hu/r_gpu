@@ -256,17 +256,18 @@ impl Matrix<4> {
 
         let perspective_projection = Matrix {
             data: [
-                [2.0 * (-view[2]) / view[0], 0.0, 0.0, 0.0], // x
-                [0.0, 2.0 * (-view[2]) / view[1], 0.0, 0.0], // y
+                [2.0 * (view[2]) / view[0], 0.0, 0.0, 0.0], // x
+                [0.0, 2.0 * (view[2]) / view[1], 0.0, 0.0], // y
                 [
                     0.0,
                     0.0,
-                    (-view[3]) / (view[3] - view[2]),
-                    view[2] * view[3] / (view[3] - view[2]),
+                    1.0 / (view[2] - view[3]),
+                    view[2] / (view[2] - view[3]),
                 ], // z
                 [0.0, 0.0, -1.0, 0.0],
             ],
         };
+
         return perspective_projection * rotation * translation;
     }
 }
