@@ -1,12 +1,17 @@
 use std::sync::Arc;
 
 use wgpu::{
-    BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType,
-    BufferBindingType, CommandEncoderDescriptor, Device, DeviceDescriptor, Extent3d, Face,
-    Features, FeaturesWGPU, FeaturesWebGPU, Instance, Limits, MemoryHints,
-    PipelineLayoutDescriptor, PowerPreference, Queue, RenderPipeline, RequestAdapterOptions,
-    ShaderStages, Surface, SurfaceConfiguration, TextureDescriptor, TextureDimension,
-    TextureFormat, TextureUsages, TextureView, Trace,
+    BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, BufferAddress,
+    BufferBindingType, Color, CommandEncoderDescriptor, CompareFunction, DepthBiasState,
+    DepthStencilState, Device, DeviceDescriptor, Extent3d, Face, Features, FeaturesWGPU,
+    FeaturesWebGPU, FragmentState, Instance, Limits, LoadOp, MemoryHints, MultisampleState,
+    Operations, PipelineLayout, PipelineLayoutDescriptor, PowerPreference, PrimitiveState,
+    PrimitiveTopology, Queue, RenderPassColorAttachment, RenderPassDepthStencilAttachment,
+    RenderPassDescriptor, RenderPipeline, RenderPipelineDescriptor, RequestAdapterOptions,
+    ShaderModuleDescriptor, ShaderSource, ShaderStages, StencilState, StoreOp, Surface,
+    SurfaceConfiguration, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
+    TextureView, TextureViewDescriptor, Trace, VertexAttribute, VertexBufferLayout, VertexFormat,
+    VertexState, VertexStepMode,
 };
 use winit::{dpi::PhysicalSize, window::Window};
 
@@ -62,36 +67,36 @@ impl<'w> WebGpuContext<'w> {
 
         let depth_texture = device.create_texture(&TextureDescriptor {
             label: None,
-            size: wgpu::Extent3d {
+            size: Extent3d {
                 width: surface_config.width.max(1),
                 height: surface_config.height.max(1),
                 depth_or_array_layers: 1,
             },
             mip_level_count: 1,
             sample_count: DEFAULT_MULTI_SAMPLE,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Depth32FloatStencil8,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[wgpu::TextureFormat::Depth32FloatStencil8],
+            dimension: TextureDimension::D2,
+            format: TextureFormat::Depth32FloatStencil8,
+            usage: TextureUsages::RENDER_ATTACHMENT,
+            view_formats: &[TextureFormat::Depth32FloatStencil8],
         });
-        let depth_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let depth_view = depth_texture.create_view(&TextureViewDescriptor::default());
 
         let multi_sample_texture = device.create_texture(&TextureDescriptor {
             label: None,
-            size: wgpu::Extent3d {
+            size: Extent3d {
                 width: surface_config.width.max(1),
                 height: surface_config.height.max(1),
                 depth_or_array_layers: 1,
             },
             mip_level_count: 1,
             sample_count: DEFAULT_MULTI_SAMPLE,
-            dimension: wgpu::TextureDimension::D2,
+            dimension: TextureDimension::D2,
             format: surface_config.format,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            usage: TextureUsages::RENDER_ATTACHMENT,
             view_formats: &[surface_config.format],
         });
 
-        let color_view = multi_sample_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let color_view = multi_sample_texture.create_view(&TextureViewDescriptor::default());
 
         let scene_bind_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
             label: None,
@@ -167,25 +172,25 @@ impl<'w> WebGpuContext<'w> {
                 usage: TextureUsages::RENDER_ATTACHMENT,
                 view_formats: &[TextureFormat::Depth32FloatStencil8],
             })
-            .create_view(&wgpu::TextureViewDescriptor::default());
+            .create_view(&TextureViewDescriptor::default());
 
         self.color_view = self
             .device
             .create_texture(&TextureDescriptor {
                 label: None,
-                size: wgpu::Extent3d {
+                size: Extent3d {
                     width: self.surface_config.width.max(1),
                     height: self.surface_config.height.max(1),
                     depth_or_array_layers: 1,
                 },
                 mip_level_count: 1,
                 sample_count: DEFAULT_MULTI_SAMPLE,
-                dimension: wgpu::TextureDimension::D2,
+                dimension: TextureDimension::D2,
                 format: self.surface_config.format,
-                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                usage: TextureUsages::RENDER_ATTACHMENT,
                 view_formats: &[self.surface_config.format],
             })
-            .create_view(&wgpu::TextureViewDescriptor::default());
+            .create_view(&TextureViewDescriptor::default());
     }
     pub fn draw(&mut self, world: &World) {
         let mut encoder = self
@@ -198,29 +203,29 @@ impl<'w> WebGpuContext<'w> {
             .expect("Failed to acquire next texture");
 
         {
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            let mut render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
                 label: None,
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                color_attachments: &[Some(RenderPassColorAttachment {
                     view: &self.color_view,
                     resolve_target: Some(
                         &surface_texture
                             .texture
-                            .create_view(&wgpu::TextureViewDescriptor::default()),
+                            .create_view(&TextureViewDescriptor::default()),
                     ),
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
-                        store: wgpu::StoreOp::Store,
+                    ops: Operations {
+                        load: LoadOp::Clear(Color::BLACK),
+                        store: StoreOp::Store,
                     },
                 })],
-                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                depth_stencil_attachment: Some(RenderPassDepthStencilAttachment {
                     view: &self.depth_view,
-                    depth_ops: Some(wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(1.0),
-                        store: wgpu::StoreOp::Store,
+                    depth_ops: Some(Operations {
+                        load: LoadOp::Clear(1.0),
+                        store: StoreOp::Store,
                     }),
-                    stencil_ops: Some(wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(0),
-                        store: wgpu::StoreOp::Store,
+                    stencil_ops: Some(Operations {
+                        load: LoadOp::Clear(0),
+                        store: StoreOp::Store,
                     }),
                 }),
                 timestamp_writes: None,
@@ -235,69 +240,69 @@ impl<'w> WebGpuContext<'w> {
     }
 }
 
-fn create_vertex_buffer_layout() -> wgpu::VertexBufferLayout<'static> {
-    wgpu::VertexBufferLayout {
-        array_stride: size_of::<Vertex>() as wgpu::BufferAddress,
-        step_mode: wgpu::VertexStepMode::Vertex,
+fn create_vertex_buffer_layout() -> VertexBufferLayout<'static> {
+    VertexBufferLayout {
+        array_stride: size_of::<Vertex>() as BufferAddress,
+        step_mode: VertexStepMode::Vertex,
         attributes: &[
-            wgpu::VertexAttribute {
+            VertexAttribute {
                 offset: 0,
                 shader_location: 0,
-                format: wgpu::VertexFormat::Float32x4,
+                format: VertexFormat::Float32x4,
             },
-            wgpu::VertexAttribute {
-                offset: size_of::<[f32; 4]>() as wgpu::BufferAddress,
+            VertexAttribute {
+                offset: size_of::<[f32; 4]>() as BufferAddress,
                 shader_location: 1,
-                format: wgpu::VertexFormat::Float32x4,
+                format: VertexFormat::Float32x4,
             },
-            wgpu::VertexAttribute {
-                offset: size_of::<[f32; 8]>() as wgpu::BufferAddress,
+            VertexAttribute {
+                offset: size_of::<[f32; 8]>() as BufferAddress,
                 shader_location: 2,
-                format: wgpu::VertexFormat::Float32x4,
+                format: VertexFormat::Float32x4,
             },
         ],
     }
 }
 
 fn create_pipeline(
-    device: &wgpu::Device,
-    swap_chain_format: wgpu::TextureFormat,
-    render_pipeline_layout: &wgpu::PipelineLayout,
-) -> wgpu::RenderPipeline {
-    let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+    device: &Device,
+    swap_chain_format: TextureFormat,
+    render_pipeline_layout: &PipelineLayout,
+) -> RenderPipeline {
+    let shader = device.create_shader_module(ShaderModuleDescriptor {
         label: None,
-        source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!(
+        source: ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!(
             "shader/object.wgsl"
         ))),
     });
-    device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+    device.create_render_pipeline(&RenderPipelineDescriptor {
         label: None,
         layout: Some(render_pipeline_layout),
-        vertex: wgpu::VertexState {
+        vertex: VertexState {
             module: &shader,
             entry_point: Some("vs_main"),
             buffers: &[create_vertex_buffer_layout()],
             compilation_options: Default::default(),
         },
-        fragment: Some(wgpu::FragmentState {
+        fragment: Some(FragmentState {
             module: &shader,
             entry_point: Some("fs_main"),
             compilation_options: Default::default(),
             targets: &[Some(swap_chain_format.into())],
         }),
-        primitive: wgpu::PrimitiveState {
-            topology: wgpu::PrimitiveTopology::TriangleList,
+        primitive: PrimitiveState {
+            topology: PrimitiveTopology::TriangleList,
             cull_mode: Some(Face::Back),
             ..Default::default()
         },
-        depth_stencil: Some(wgpu::DepthStencilState {
+        depth_stencil: Some(DepthStencilState {
             depth_write_enabled: true,
-            depth_compare: wgpu::CompareFunction::Less,
-            format: wgpu::TextureFormat::Depth32FloatStencil8,
-            bias: wgpu::DepthBiasState::default(),
-            stencil: wgpu::StencilState::default(),
+            depth_compare: CompareFunction::Less,
+            format: TextureFormat::Depth32FloatStencil8,
+            bias: DepthBiasState::default(),
+            stencil: StencilState::default(),
         }),
-        multisample: wgpu::MultisampleState {
+        multisample: MultisampleState {
             count: DEFAULT_MULTI_SAMPLE,
             mask: !0,
             alpha_to_coverage_enabled: false,
