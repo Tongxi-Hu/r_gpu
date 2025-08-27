@@ -158,6 +158,10 @@ impl Dimension4 for Vector {
     fn get_w(&self) -> Self::Value {
         self.w
     }
+
+    fn get_raw(&self) -> [Self::Value; 4] {
+        [self.x, self.y, self.z, self.w]
+    }
 }
 
 impl FuzzyEq for Vector {

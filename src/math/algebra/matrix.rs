@@ -1,13 +1,13 @@
 use std::ops::{Index, IndexMut, Mul};
 
-use crate::math::algebra::common::deg_to_rad;
+use crate::math::algebra::{common::deg_to_rad, point::Point, vector::Vector};
 
 use super::common::{Determinant, Dimension4, FuzzyEq};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct Matrix<const D: usize> {
-    data: [[f32; D]; D],
+    pub data: [[f32; D]; D],
 }
 
 unsafe impl<const D: usize> bytemuck::Zeroable for Matrix<D> {}
@@ -41,6 +41,10 @@ impl<const D: usize> Matrix<D> {
             }
         }
         matrix
+    }
+
+    pub fn get_raw(&self) -> [[f32; D]; D] {
+        return self.data;
     }
 }
 
@@ -168,7 +172,7 @@ impl Matrix<4> {
         !self.det().fuzzy_eq(&0.0)
     }
 
-    pub fn inverse(&self) -> Result<Matrix<4>, String> {
+    pub fn inverse(&self) -> Result<Self, String> {
         if self.is_invertible() {
             let det = self.det();
             let mut inverse: Matrix<4> = Matrix::new();
@@ -184,7 +188,7 @@ impl Matrix<4> {
         }
     }
 
-    pub fn translation(x: f32, y: f32, z: f32) -> Matrix<4> {
+    pub fn translation(x: f32, y: f32, z: f32) -> Self {
         Matrix::<4> {
             data: [
                 [1.0, 0.0, 0.0, x],
@@ -195,7 +199,7 @@ impl Matrix<4> {
         }
     }
 
-    pub fn scale(x: f32, y: f32, z: f32) -> Matrix<4> {
+    pub fn scale(x: f32, y: f32, z: f32) -> Self {
         Matrix::<4> {
             data: [
                 [x, 0.0, 0.0, 0.0],
@@ -206,7 +210,7 @@ impl Matrix<4> {
         }
     }
 
-    pub fn rotate_x(deg: f32) -> Matrix<4> {
+    pub fn rotate_x(deg: f32) -> Self {
         let r = deg_to_rad(deg);
         Matrix::<4> {
             data: [
@@ -218,7 +222,7 @@ impl Matrix<4> {
         }
     }
 
-    pub fn rotate_y(deg: f32) -> Matrix<4> {
+    pub fn rotate_y(deg: f32) -> Self {
         let r = deg_to_rad(deg);
         Matrix::<4> {
             data: [
@@ -230,7 +234,7 @@ impl Matrix<4> {
         }
     }
 
-    pub fn rotate_z(deg: f32) -> Matrix<4> {
+    pub fn rotate_z(deg: f32) -> Self {
         let r = deg_to_rad(deg);
         Matrix::<4> {
             data: [
@@ -240,6 +244,30 @@ impl Matrix<4> {
                 [0.0, 0.0, 0.0, 1.0],
             ],
         }
+    }
+
+    // view:(with,height,near,far)
+    pub fn perspective(view: Point, eye: Point, _eye_direction: Vector) -> Self {
+        let view = view.get_raw();
+        // move eye to the origin
+        let translation = Self::translation(-eye.get_x(), -eye.get_y(), -eye.get_z());
+        //TODO: look to negative z direction
+        let rotation = Matrix::identity();
+
+        let perspective_projection = Matrix {
+            data: [
+                [2.0 * (-view[2]) / view[0], 0.0, 0.0, 0.0], // x
+                [0.0, 2.0 * (-view[2]) / view[1], 0.0, 0.0], // y
+                [
+                    0.0,
+                    0.0,
+                    (-view[3]) / (view[3] - view[2]),
+                    view[2] * view[3] / (view[3] - view[2]),
+                ], // z
+                [0.0, 0.0, -1.0, 0.0],
+            ],
+        };
+        return perspective_projection * rotation * translation;
     }
 }
 

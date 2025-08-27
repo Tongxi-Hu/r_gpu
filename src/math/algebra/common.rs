@@ -23,6 +23,7 @@ pub trait Dimension4 {
     fn get_y(&self) -> Self::Value;
     fn get_z(&self) -> Self::Value;
     fn get_w(&self) -> Self::Value;
+    fn get_raw(&self) -> [Self::Value; 4];
 }
 
 pub trait Determinant {

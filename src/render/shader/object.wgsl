@@ -1,8 +1,9 @@
 struct Scene {
-    view: vec4<f32>,
+    perspective_projection: mat4x4<f32>,
     light_position: vec4<f32>,
     light_direction: vec4<f32>,
     eye_position: vec4<f32>,
+    eye_direction: vec4<f32>,
 }
 
 struct Transform {
@@ -42,7 +43,7 @@ fn vs_main(in: Input) -> Inter {
     let transformed = in.position * (tran.scale * tran.rotation * tran.translation);
 
     var inter: Inter;
-    inter.position = transformed * to_clip_space(scene.view);
+    inter.position = transformed * scene.perspective_projection;
     inter.color = in.color;
     inter.surface_vector = in.norm * tran.rotation;
     inter.surface_light_vector = scene.light_position - transformed;
@@ -54,16 +55,6 @@ fn vs_main(in: Input) -> Inter {
 @fragment
 fn fs_main(inter: Inter) -> @location(0) vec4<f32> {
     return lighting(inter.color, inter.surface_vector, inter.surface_light_vector, inter.surface_eye_vector, inter.light_direction);
-}
-
-// (width, height, near, far)
-fn to_clip_space(view: vec4<f32>) -> mat4x4<f32> {
-    return mat4x4<f32>(//
-        vec4<f32>(2.0 * (- view[2]) / view[0], 0.0, 0.0, 0.0), // x
-        vec4<f32>(0.0, 2.0 * (- view[2]) / view[1], 0.0, 0.0), // y
-        vec4<f32>(0.0, 0.0, (- view[3]) / (view[3] - view[2]), view[2] * view[3] / (view[3] - view[2])), // z
-        vec4<f32>(0.0, 0.0, - 1.0, 0.0));
-    // w
 }
 
 fn lighting(color: vec4<f32>, surface_vector: vec4<f32>, surface_light_vector: vec4<f32>, surface_eye_vector: vec4<f32>, light_direction: vec4<f32>) -> vec4<f32> {
