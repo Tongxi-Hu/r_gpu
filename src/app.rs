@@ -45,7 +45,12 @@ impl<'w> ApplicationHandler for App<'w> {
             world.add_object(generate_teapot());
             world.init_buffer(
                 &self.web_gpu_context.as_ref().unwrap().device,
-                &self.web_gpu_context.as_ref().unwrap().bind_group_layout,
+                &self
+                    .web_gpu_context
+                    .as_ref()
+                    .unwrap()
+                    .render_config
+                    .bind_group_layout,
             );
             self.world = Some(world);
         }
