@@ -267,7 +267,7 @@ fn create_pipeline(
     let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
         label: None,
         source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!(
-            "shader/basic.wgsl"
+            "shader/object.wgsl"
         ))),
     });
     device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
