@@ -49,7 +49,7 @@ impl World {
         });
     }
 
-    pub fn set_pipeline(&self, render_pass: &mut RenderPass) {
+    pub fn bind_render_buffer(&self, render_pass: &mut RenderPass) {
         render_pass.set_bind_group(0, self.scene.scene_bind_group.as_ref().unwrap(), &[]);
         self.objects.values().for_each(|object| {
             render_pass.set_bind_group(1, object.transform_bind_group.as_ref().unwrap(), &[]);

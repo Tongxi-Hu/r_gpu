@@ -7,7 +7,7 @@ use wgpu::{
     RenderPipeline, RenderPipelineDescriptor, ShaderModuleDescriptor, ShaderSource, ShaderStages,
     StencilState, StoreOp, SurfaceConfiguration, SurfaceTexture, TextureDescriptor,
     TextureDimension, TextureFormat, TextureUsages, TextureView, TextureViewDescriptor,
-    VertexState, wgc::id::markers::RenderPassEncoder,
+    VertexState,
 };
 
 use crate::render::web_gpu::create_vertex_buffer_layout;
@@ -76,11 +76,11 @@ impl RenderConfig {
         self.multi_sample_view = multi_sample_view;
     }
 
-    pub fn create_render_pass<'a, 'b: 'a>(
+    pub fn create_render_pass<'b, 'a: 'b>(
         &'a self,
         encoder: &'b mut CommandEncoder,
         surface_texture: &SurfaceTexture,
-    ) -> RenderPass<'a> {
+    ) -> RenderPass<'b> {
         let mut render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
             label: None,
             color_attachments: &[Some(RenderPassColorAttachment {

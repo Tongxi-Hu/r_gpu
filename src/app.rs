@@ -43,6 +43,7 @@ impl<'w> ApplicationHandler for App<'w> {
             let mut world = World::new(size);
             world.add_object(generate_ground());
             world.add_object(generate_teapot());
+            //TODO: render config should be decided by world content
             world.init_buffer(
                 &self.web_gpu_context.as_ref().unwrap().device,
                 &self

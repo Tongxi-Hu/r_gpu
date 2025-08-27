@@ -81,6 +81,7 @@ impl<'w> WebGpuContext<'w> {
         let mut encoder = self
             .device
             .create_command_encoder(&CommandEncoderDescriptor { label: None });
+        //TODO: shadow pass
 
         let surface_texture = self
             .surface
@@ -91,7 +92,7 @@ impl<'w> WebGpuContext<'w> {
             let mut render_pass = self
                 .render_config
                 .create_render_pass(&mut encoder, &surface_texture);
-            world.set_pipeline(&mut render_pass)
+            world.bind_render_buffer(&mut render_pass)
         }
 
         self.queue.submit(Some(encoder.finish()));
