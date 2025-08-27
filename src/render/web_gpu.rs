@@ -5,7 +5,7 @@ use wgpu::{
     BufferBindingType, CommandEncoderDescriptor, Device, DeviceDescriptor, Extent3d, Face,
     Features, FeaturesWGPU, FeaturesWebGPU, Instance, Limits, MemoryHints,
     PipelineLayoutDescriptor, PowerPreference, Queue, RenderPipeline, RequestAdapterOptions,
-    ShaderStages, Surface, SurfaceConfiguration, Texture, TextureDescriptor, TextureDimension,
+    ShaderStages, Surface, SurfaceConfiguration, TextureDescriptor, TextureDimension,
     TextureFormat, TextureUsages, TextureView, Trace,
 };
 use winit::{dpi::PhysicalSize, window::Window};
@@ -24,7 +24,6 @@ pub struct WebGpuContext<'w> {
     render_pipeline: RenderPipeline,
     depth_view: TextureView,
     color_view: TextureView,
-    resolve_target_view: TextureView,
 }
 
 impl<'w> WebGpuContext<'w> {
@@ -94,14 +93,6 @@ impl<'w> WebGpuContext<'w> {
 
         let color_view = multi_sample_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
-        let resolve_target_texture = surface
-            .get_current_texture()
-            .expect("Failed to acquire next texture");
-
-        let resolve_target_view = resolve_target_texture
-            .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
-
         let scene_bind_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
             label: None,
             entries: &[BindGroupLayoutEntry {
@@ -146,7 +137,6 @@ impl<'w> WebGpuContext<'w> {
             queue,
             depth_view,
             color_view,
-            resolve_target_view,
             render_pipeline,
             bind_group_layout: [scene_bind_layout, model_bind_layout],
         }
