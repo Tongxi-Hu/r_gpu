@@ -84,35 +84,23 @@ impl Illuminated for Phong {
     fn lighting(&self, light: &PointLight, intersection: &Intersection) -> Color {
         let effective_color = self.color * light.intensity;
         let ambient_color = effective_color * self.ambient;
-        let light_v_try =
+        let light_v =
             Vector::from_points(&intersection.get_surface_point(), &light.position).unit();
-        match light_v_try {
-            Err(_) => Color::black() + Color::black() + Color::black(),
-            Ok(light_v) => {
-                let light_normal = light_v.dot(&intersection.get_normal());
-                if light_normal < 0.0 {
-                    //light on the other side of the surface
-                    return ambient_color + Color::black() + Color::black();
-                } else {
-                    //light on the same side of the surface
-                    let diffuse_color = effective_color * self.diffuse * light_normal;
-                    let reflect_v_try = light_v.reflect(&intersection.get_normal());
-                    match reflect_v_try {
-                        Err(_) => ambient_color + diffuse_color + Color::black(),
-                        Ok(reflect_v) => {
-                            let reflect_eye = reflect_v.dot(&intersection.get_eye_v());
-                            if reflect_eye <= 0.0 {
-                                return ambient_color + diffuse_color + Color::black();
-                            } else {
-                                return ambient_color
-                                    + diffuse_color
-                                    + light.intensity
-                                        * self.specular
-                                        * reflect_eye.powf(self.shininess);
-                            }
-                        }
-                    }
-                }
+        let light_normal = light_v.dot(&intersection.get_normal());
+        if light_normal < 0.0 {
+            //light on the other side of the surface
+            return ambient_color + Color::black() + Color::black();
+        } else {
+            //light on the same side of the surface
+            let diffuse_color = effective_color * self.diffuse * light_normal;
+            let reflect_v = light_v.reflect(&intersection.get_normal());
+            let reflect_eye = reflect_v.dot(&intersection.get_eye_v());
+            if reflect_eye <= 0.0 {
+                return ambient_color + diffuse_color + Color::black();
+            } else {
+                return ambient_color
+                    + diffuse_color
+                    + light.intensity * self.specular * reflect_eye.powf(self.shininess);
             }
         }
     }

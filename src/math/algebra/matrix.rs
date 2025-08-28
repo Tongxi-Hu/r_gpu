@@ -247,12 +247,16 @@ impl Matrix<4> {
     }
 
     // view:(with,height,near,far)
-    pub fn perspective(view: Point, eye: Point, _eye_direction: Vector) -> Self {
+    pub fn perspective(view: Point, eye: Point, eye_direction: Vector) -> Self {
         let view = view.get_raw();
+
         // move eye to the origin
         let translation = Self::translation(-eye.get_x(), -eye.get_y(), -eye.get_z());
-        //TODO: look to negative z direction
-        let rotation = Matrix::identity();
+
+        //rotation eye_direction into negative z
+        let default_view_direction = -Vector::unit_z();
+
+        let rotation = Matrix::rotate_to_target(eye_direction, default_view_direction);
 
         let perspective_projection = Matrix {
             data: [
@@ -269,6 +273,48 @@ impl Matrix<4> {
         };
 
         return perspective_projection * rotation * translation;
+    }
+
+    pub fn rotate_to_target(direction: Vector, target: Vector) -> Self {
+        let direction = direction.unit();
+        let target = target.unit();
+
+        let axis = direction.cross(&target);
+        // Handle case where cross product is zero (parallel vectors)
+        if axis.is_zero() {
+            return Self::identity();
+        }
+
+        let axis = axis.unit();
+        let angle = direction.angle_with(&target);
+
+        let (sin_t, cos_t) = (angle.sin(), angle.cos());
+        let (x, y, z) = axis.get_value();
+        let one_minus_cos = 1.0 - cos_t;
+
+        Matrix::<4> {
+            data: [
+                [
+                    cos_t + x * x * one_minus_cos,
+                    x * y * one_minus_cos - z * sin_t,
+                    x * z * one_minus_cos + y * sin_t,
+                    0.0,
+                ],
+                [
+                    y * x * one_minus_cos + z * sin_t,
+                    cos_t + y * y * one_minus_cos,
+                    y * z * one_minus_cos - x * sin_t,
+                    0.0,
+                ],
+                [
+                    z * x * one_minus_cos - y * sin_t,
+                    z * y * one_minus_cos + x * sin_t,
+                    cos_t + z * z * one_minus_cos,
+                    0.0,
+                ],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+        }
     }
 }
 

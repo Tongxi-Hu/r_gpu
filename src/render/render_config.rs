@@ -1,59 +1,65 @@
 use wgpu::{
-    BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType,
-    BufferBindingType, Color, CommandEncoder, CompareFunction, DepthBiasState, DepthStencilState,
-    Device, Extent3d, Face, FragmentState, LoadOp, MultisampleState, Operations, PipelineLayout,
-    PipelineLayoutDescriptor, PrimitiveState, PrimitiveTopology, RenderPass,
-    RenderPassColorAttachment, RenderPassDepthStencilAttachment, RenderPassDescriptor,
-    RenderPipeline, RenderPipelineDescriptor, ShaderModuleDescriptor, ShaderSource, ShaderStages,
-    StencilState, StoreOp, SurfaceConfiguration, SurfaceTexture, TextureDescriptor,
-    TextureDimension, TextureFormat, TextureUsages, TextureView, TextureViewDescriptor,
-    VertexState,
+    AddressMode, BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout,
+    BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingResource, BindingType, Color,
+    CommandEncoder, CompareFunction, DepthBiasState, DepthStencilState, Device, Extent3d, Face,
+    FilterMode, FragmentState, LoadOp, MultisampleState, Operations, PipelineLayout,
+    PipelineLayoutDescriptor, PrimitiveState, PrimitiveTopology, RenderPassColorAttachment,
+    RenderPassDepthStencilAttachment, RenderPassDescriptor, RenderPipeline,
+    RenderPipelineDescriptor, SamplerBindingType, SamplerDescriptor, ShaderModuleDescriptor,
+    ShaderSource, ShaderStages, StencilState, StoreOp, SurfaceConfiguration, SurfaceTexture,
+    TextureDescriptor, TextureDimension, TextureFormat, TextureSampleType, TextureUsages,
+    TextureView, TextureViewDescriptor, TextureViewDimension, VertexState,
 };
 
-use crate::render::web_gpu::create_vertex_buffer_layout;
-
-const DEFAULT_MULTI_SAMPLE: u32 = 4;
+use crate::{
+    constant::{DEFAULT_MULTI_SAMPLE_COUNT, DEFAULT_SAMPLE_COUNT},
+    content::world::World,
+    render::web_gpu::create_vertex_buffer_layout,
+};
 
 pub struct RenderConfig {
     pub render_pipeline: RenderPipeline,
-    pub bind_group_layout: [BindGroupLayout; 2],
     depth_view: TextureView,
     multi_sample_view: TextureView,
+    shadow_bind_group: BindGroup,
 }
 
 impl RenderConfig {
-    pub fn new(device: &Device, surface_config: &SurfaceConfiguration) -> Self {
-        let scene_bind_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+    pub fn new(
+        device: &Device,
+        surface_config: &SurfaceConfiguration,
+        world_bind_layout: &(BindGroupLayout, BindGroupLayout),
+        shadow_view: &TextureView,
+    ) -> Self {
+        let shadow_bind_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
             label: None,
-            entries: &[BindGroupLayoutEntry {
-                binding: 0,
-                visibility: ShaderStages::VERTEX_FRAGMENT,
-                ty: BindingType::Buffer {
-                    ty: BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
+            entries: &[
+                BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: ShaderStages::FRAGMENT,
+                    ty: BindingType::Texture {
+                        multisampled: false,
+                        sample_type: TextureSampleType::Depth,
+                        view_dimension: TextureViewDimension::D2,
+                    },
+                    count: None,
                 },
-                count: None,
-            }],
-        });
-
-        let model_bind_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-            label: None,
-            entries: &[BindGroupLayoutEntry {
-                binding: 0,
-                visibility: ShaderStages::VERTEX_FRAGMENT,
-                ty: BindingType::Buffer {
-                    ty: BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
+                BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: ShaderStages::FRAGMENT,
+                    ty: BindingType::Sampler(SamplerBindingType::Comparison), // Changed from Comparison
+                    count: None,
                 },
-                count: None,
-            }],
+            ],
         });
 
         let render_pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
             label: None,
-            bind_group_layouts: &[&scene_bind_layout, &model_bind_layout],
+            bind_group_layouts: &[
+                &world_bind_layout.0,
+                &world_bind_layout.1,
+                &shadow_bind_layout,
+            ],
             push_constant_ranges: &[],
         });
 
@@ -62,11 +68,38 @@ impl RenderConfig {
 
         let (depth_view, multi_sample_view) = create_render_view(device, surface_config);
 
+        let shadow_bind_group = device.create_bind_group(&BindGroupDescriptor {
+            label: None,
+            layout: &shadow_bind_layout,
+            entries: &[
+                BindGroupEntry {
+                    binding: 0,
+                    resource: BindingResource::TextureView(shadow_view),
+                },
+                BindGroupEntry {
+                    binding: 1,
+                    resource: BindingResource::Sampler(&device.create_sampler(
+                        &SamplerDescriptor {
+                            label: None,
+                            address_mode_u: AddressMode::ClampToEdge,
+                            address_mode_v: AddressMode::ClampToEdge,
+                            address_mode_w: AddressMode::ClampToEdge,
+                            mag_filter: FilterMode::Linear,
+                            min_filter: FilterMode::Linear,
+                            mipmap_filter: FilterMode::Nearest,
+                            compare: Some(CompareFunction::Less),
+                            ..Default::default()
+                        },
+                    )),
+                },
+            ],
+        });
+
         Self {
             render_pipeline,
-            bind_group_layout: [scene_bind_layout, model_bind_layout],
             depth_view,
             multi_sample_view,
+            shadow_bind_group,
         }
     }
 
@@ -76,11 +109,12 @@ impl RenderConfig {
         self.multi_sample_view = multi_sample_view;
     }
 
-    pub fn create_render_pass<'b, 'a: 'b>(
-        &'a self,
-        encoder: &'b mut CommandEncoder,
+    pub fn create_render_pass(
+        &self,
+        encoder: &mut CommandEncoder,
         surface_texture: &SurfaceTexture,
-    ) -> RenderPass<'b> {
+        world: &World,
+    ) {
         let mut render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
             label: None,
             color_attachments: &[Some(RenderPassColorAttachment {
@@ -109,12 +143,19 @@ impl RenderConfig {
             timestamp_writes: None,
             occlusion_query_set: None,
         });
+
         render_pass.set_pipeline(&self.render_pipeline);
-        return render_pass;
+        render_pass.set_bind_group(0, world.scene.scene_bind_group.as_ref().unwrap(), &[]);
+        render_pass.set_bind_group(2, &self.shadow_bind_group, &[]);
+        world.objects.values().for_each(|object| {
+            render_pass.set_bind_group(1, object.transform_bind_group.as_ref().unwrap(), &[]);
+            render_pass.set_vertex_buffer(0, object.vertex_buffer.as_ref().unwrap().slice(..));
+            render_pass.draw(0..object.vertex_data.len() as u32, 0..1);
+        });
     }
 }
 
-pub fn create_render_view(
+fn create_render_view(
     device: &Device,
     surface_config: &SurfaceConfiguration,
 ) -> (TextureView, TextureView) {
@@ -128,7 +169,7 @@ pub fn create_render_view(
                     depth_or_array_layers: 1,
                 },
                 mip_level_count: 1,
-                sample_count: DEFAULT_MULTI_SAMPLE,
+                sample_count: DEFAULT_MULTI_SAMPLE_COUNT,
                 dimension: TextureDimension::D2,
                 format: TextureFormat::Depth32FloatStencil8,
                 usage: TextureUsages::RENDER_ATTACHMENT,
@@ -144,7 +185,7 @@ pub fn create_render_view(
                     depth_or_array_layers: 1,
                 },
                 mip_level_count: 1,
-                sample_count: DEFAULT_MULTI_SAMPLE,
+                sample_count: DEFAULT_MULTI_SAMPLE_COUNT,
                 dimension: TextureDimension::D2,
                 format: surface_config.format,
                 usage: TextureUsages::RENDER_ATTACHMENT,
@@ -193,7 +234,7 @@ fn create_render_pipeline(
             stencil: StencilState::default(),
         }),
         multisample: MultisampleState {
-            count: DEFAULT_MULTI_SAMPLE,
+            count: DEFAULT_MULTI_SAMPLE_COUNT,
             mask: !0,
             alpha_to_coverage_enabled: false,
         },

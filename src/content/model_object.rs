@@ -3,7 +3,8 @@ use std::{fs::File, io::BufReader};
 use bytemuck::cast_slice;
 use obj::load_obj;
 use wgpu::{
-    BindGroup, BindGroupLayout, Buffer, BufferUsages, Device, Queue,
+    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, Buffer, BufferUsages, Device,
+    Queue,
     util::{BufferInitDescriptor, DeviceExt},
 };
 
@@ -39,7 +40,7 @@ impl ModelObject {
 }
 
 impl WithGPUBuffer for ModelObject {
-    fn init_buffer(&mut self, device: &Device, bind_group_layout: &[BindGroupLayout]) {
+    fn init_buffer(&mut self, device: &Device, bind_group_layout: &BindGroupLayout) {
         self.vertex_buffer = Some(device.create_buffer_init(&BufferInitDescriptor {
             label: None,
             contents: cast_slice(&self.vertex_data),
@@ -52,10 +53,10 @@ impl WithGPUBuffer for ModelObject {
             usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         }));
 
-        self.transform_bind_group = Some(device.create_bind_group(&wgpu::BindGroupDescriptor {
+        self.transform_bind_group = Some(device.create_bind_group(&BindGroupDescriptor {
             label: None,
-            layout: &bind_group_layout[0],
-            entries: &[wgpu::BindGroupEntry {
+            layout: &bind_group_layout,
+            entries: &[BindGroupEntry {
                 binding: 0,
                 resource: self.transform_buffer.as_ref().unwrap().as_entire_binding(),
             }],

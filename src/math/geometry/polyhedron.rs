@@ -25,7 +25,7 @@ impl Polyhedron {
     pub fn norm_to(&self, surface_index: usize) -> Option<Vector> {
         self.triangles
             .get(surface_index)
-            .and_then(|triangle| triangle.norm())
+            .and_then(|triangle| Some(triangle.norm()))
     }
 
     pub fn on_surface(&self, point: &Point) -> Option<usize> {

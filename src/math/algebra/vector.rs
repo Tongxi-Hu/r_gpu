@@ -104,7 +104,7 @@ impl Vector {
         self.dot(&self).sqrt()
     }
 
-    pub fn unit(&self) -> Result<Self, String> {
+    pub fn unit(&self) -> Self {
         *self / self.norm()
     }
 
@@ -115,29 +115,20 @@ impl Vector {
     }
 
     /// in radius
-    pub fn angle_with(&self, other: &Self) -> Option<f32> {
+    pub fn angle_with(&self, other: &Self) -> f32 {
         let (unit_1, unit_2) = (self.unit(), other.unit());
-        match (unit_1, unit_2) {
-            (Ok(val_1), Ok(val_2)) => {
-                let product = val_1.dot(&val_2);
-                if product.fuzzy_eq(&1.0) {
-                    Some(1.0_f32.acos())
-                } else if product.fuzzy_eq(&-1.0) {
-                    Some(-1.0_f32.acos())
-                } else {
-                    Some(product.acos())
-                }
-            }
-            _ => None,
+        let product = unit_1.dot(&unit_2);
+        if product.fuzzy_eq(&1.0) {
+            1.0_f32.acos()
+        } else if product.fuzzy_eq(&-1.0) {
+            -1.0_f32.acos()
+        } else {
+            product.acos()
         }
     }
 
-    pub fn reflect(&self, normal: &Self) -> Result<Self, String> {
-        if normal.norm().fuzzy_eq(&0.0) {
-            Err("Norm has 0 magnitude".to_string())
-        } else {
-            Ok(-*self + (*normal) * 2.0 * self.dot(normal))
-        }
+    pub fn reflect(&self, normal: &Self) -> Self {
+        -*self + (*normal) * 2.0 * self.dot(normal)
     }
 }
 
@@ -215,13 +206,10 @@ impl Mul<f32> for Vector {
 }
 
 impl Div<f32> for Vector {
-    type Output = Result<Self, String>;
+    type Output = Self;
 
     fn div(self, s: f32) -> Self::Output {
-        match s {
-            0.0 => Result::Err(String::from("divided by zero")),
-            _ => Result::Ok(self * (1.0 / s)),
-        }
+        self * (1.0 / s)
     }
 }
 

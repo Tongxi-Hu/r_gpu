@@ -1,16 +1,17 @@
 use std::sync::Arc;
 
 use wgpu::{
-    BufferAddress, CommandEncoderDescriptor, Device, DeviceDescriptor, Features, FeaturesWGPU,
+    BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, BufferAddress,
+    BufferBindingType, CommandEncoderDescriptor, Device, DeviceDescriptor, Features, FeaturesWGPU,
     FeaturesWebGPU, Instance, Limits, MemoryHints, PowerPreference, Queue, RequestAdapterOptions,
-    Surface, SurfaceConfiguration, Trace, VertexAttribute, VertexBufferLayout, VertexFormat,
-    VertexStepMode,
+    ShaderStages, Surface, SurfaceConfiguration, Trace, VertexAttribute, VertexBufferLayout,
+    VertexFormat, VertexStepMode,
 };
 use winit::{dpi::PhysicalSize, window::Window};
 
 use crate::{
-    content::{Vertex, world::World},
-    render::render_config::RenderConfig,
+    content::{Vertex, WithGPUBuffer, world::World},
+    render::{render_config::RenderConfig, shadow_config::ShadowConfig},
 };
 
 pub struct WebGpuContext<'w> {
@@ -18,7 +19,9 @@ pub struct WebGpuContext<'w> {
     pub queue: Queue,
     surface: Surface<'w>,
     surface_config: SurfaceConfiguration,
+    world_bind_layout: (BindGroupLayout, BindGroupLayout),
     pub render_config: RenderConfig,
+    pub shadow_config: ShadowConfig,
 }
 
 impl<'w> WebGpuContext<'w> {
@@ -55,12 +58,49 @@ impl<'w> WebGpuContext<'w> {
         let surface_config = surface.get_default_config(&adapter, width, height).unwrap();
         surface.configure(&device, &surface_config);
 
-        let render_config = RenderConfig::new(&device, &surface_config);
+        let world_bind_layout = (
+            device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+                label: None,
+                entries: &[BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: ShaderStages::VERTEX_FRAGMENT,
+                    ty: BindingType::Buffer {
+                        ty: BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                }],
+            }),
+            device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+                label: None,
+                entries: &[BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: ShaderStages::VERTEX_FRAGMENT,
+                    ty: BindingType::Buffer {
+                        ty: BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                }],
+            }),
+        );
+
+        let shadow_config = ShadowConfig::new(&device, &world_bind_layout);
+        let render_config = RenderConfig::new(
+            &device,
+            &surface_config,
+            &world_bind_layout,
+            &shadow_config.shadow_view,
+        );
 
         Self {
             surface,
             surface_config,
+            world_bind_layout,
             render_config,
+            shadow_config,
             device,
             queue,
         }
@@ -77,22 +117,40 @@ impl<'w> WebGpuContext<'w> {
         self.render_config
             .update_render_view(&self.device, &self.surface_config);
     }
+
+    pub fn init_buffer(&self, world: &mut World) {
+        world
+            .scene
+            .init_buffer(&self.device, &self.world_bind_layout.0);
+        world.objects.values_mut().for_each(|obj| {
+            obj.init_buffer(&self.device, &self.world_bind_layout.1);
+        });
+    }
+
+    pub fn update_buffer(&self, world: &mut World) {
+        world.scene.update_buffer(&self.queue);
+        world.objects.values_mut().for_each(|obj| {
+            obj.update_buffer(&self.queue);
+        });
+    }
+
     pub fn draw(&mut self, world: &World) {
         let mut encoder = self
             .device
             .create_command_encoder(&CommandEncoderDescriptor { label: None });
-        //TODO: shadow pass
-
         let surface_texture = self
             .surface
             .get_current_texture()
             .expect("Failed to acquire next texture");
+
+        {
+            self.shadow_config.create_shadow_pass(&mut encoder, &world);
+        }
+
         //render pass
         {
-            let mut render_pass = self
-                .render_config
-                .create_render_pass(&mut encoder, &surface_texture);
-            world.bind_render_buffer(&mut render_pass)
+            self.render_config
+                .create_render_pass(&mut encoder, &surface_texture, &world);
         }
 
         self.queue.submit(Some(encoder.finish()));

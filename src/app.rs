@@ -37,22 +37,17 @@ impl<'w> ApplicationHandler for App<'w> {
                     .expect("error create window"),
             );
             let size = window.inner_size();
+
             let web_gpu_context = WebGpuContext::new(window.clone());
-            self.web_gpu_context = Some(web_gpu_context);
-            self.window = Some(window);
+
             let mut world = World::new(size);
             world.add_object(generate_ground());
             world.add_object(generate_teapot());
-            //TODO: render config should be decided by world content
-            world.init_buffer(
-                &self.web_gpu_context.as_ref().unwrap().device,
-                &self
-                    .web_gpu_context
-                    .as_ref()
-                    .unwrap()
-                    .render_config
-                    .bind_group_layout,
-            );
+
+            web_gpu_context.init_buffer(&mut world);
+
+            self.web_gpu_context = Some(web_gpu_context);
+            self.window = Some(window);
             self.world = Some(world);
         }
     }
@@ -80,7 +75,7 @@ impl<'w> ApplicationHandler for App<'w> {
                 if let (Some(world), Some(web_gpu_context)) =
                     (self.world.as_mut(), self.web_gpu_context.as_mut())
                 {
-                    world.update_buffer(&web_gpu_context.queue);
+                    web_gpu_context.update_buffer(world);
                     web_gpu_context.draw(world);
                 }
             }

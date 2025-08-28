@@ -43,6 +43,6 @@ impl Intersection {
     }
 
     pub fn get_eye_v(&self) -> Vector {
-        -self.ray_direction.unit().unwrap_or(Vector::unit_z())
+        -self.ray_direction.unit()
     }
 }

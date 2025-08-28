@@ -14,14 +14,11 @@ pub struct Plane {
 }
 
 impl Plane {
-    pub fn new(center: Point, norm: Vector, size: f32) -> Result<Self, String> {
-        match norm.unit() {
-            Err(string) => Err(string),
-            Ok(unit) => Ok(Self {
-                center,
-                norm: unit,
-                size,
-            }),
+    pub fn new(center: Point, norm: Vector, size: f32) -> Self {
+        Self {
+            center,
+            norm: norm.unit(),
+            size,
         }
     }
 

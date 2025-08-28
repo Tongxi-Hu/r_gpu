@@ -47,13 +47,19 @@ impl Scene {
 }
 
 impl WithGPUBuffer for Scene {
-    fn init_buffer(&mut self, device: &Device, bind_group_layout: &[BindGroupLayout]) {
+    fn init_buffer(&mut self, device: &Device, bind_group_layout: &BindGroupLayout) {
         self.scene_buffer = Some(
             device.create_buffer_init(&BufferInitDescriptor {
                 label: None,
                 contents: cast_slice(&[
                     Matrix::perspective(self.scene_config, self.eye_position, self.eye_direction)
                         .get_raw(),
+                    Matrix::perspective(
+                        self.scene_config,
+                        self.light_position,
+                        self.light_direction,
+                    )
+                    .get_raw(),
                     [
                         self.light_position.get_raw(),
                         self.light_direction.get_raw(),
@@ -67,7 +73,7 @@ impl WithGPUBuffer for Scene {
 
         self.scene_bind_group = Some(device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: None,
-            layout: &bind_group_layout[0],
+            layout: &bind_group_layout,
             entries: &[wgpu::BindGroupEntry {
                 binding: 0,
                 resource: self.scene_buffer.as_ref().unwrap().as_entire_binding(),
@@ -81,6 +87,8 @@ impl WithGPUBuffer for Scene {
             0,
             cast_slice(&[
                 Matrix::perspective(self.scene_config, self.eye_position, self.eye_direction)
+                    .get_raw(),
+                Matrix::perspective(self.scene_config, self.light_position, self.light_direction)
                     .get_raw(),
                 [
                     self.light_position.get_raw(),
@@ -99,7 +107,7 @@ pub fn generate_scene(size: PhysicalSize<u32>) -> Scene {
     let far: f32 = 200000.0;
     // light
     let light_position: [f32; 3] = [0.0, 1000.0, 200.0];
-    let light_direction: [f32; 3] = [0.0, 0.0, -1.0];
+    let light_direction: [f32; 3] = [0.0, -1.0, -1.0];
 
     Scene::new(
         Point::new(size.width as f32, size.height as f32, near, far),

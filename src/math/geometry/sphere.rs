@@ -73,7 +73,7 @@ impl Intersect for Sphere {
     fn norm_at(&self, point: &Point) -> Result<Vector, String> {
         if self.on_sphere(point) {
             let v = Vector::from_points(&self.origin, point);
-            v.unit()
+            Ok(v.unit())
         } else {
             Err("Point not on the sphere".to_string())
         }
@@ -83,7 +83,7 @@ impl Intersect for Sphere {
 #[test]
 fn ray_intersect() {
     let sphere = Sphere::new(Point::point(0.0, 0.0, 0.0), 5.0);
-    let ray = Ray::new(Point::point(0.0, 0.0, -10.0), Vector::vector(0.0, 0.0, 1.0)).unwrap();
+    let ray = Ray::new(Point::point(0.0, 0.0, -10.0), Vector::vector(0.0, 0.0, 1.0));
     sphere.intersect(&ray).into_iter().for_each(|inter| {
         let normal = sphere.norm_at(&ray.point_at(inter.get_t())).unwrap();
         println!("{:?}", normal);

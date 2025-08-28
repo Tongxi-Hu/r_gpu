@@ -24,11 +24,10 @@ impl Triangle {
             / 2.0
     }
 
-    pub fn norm(&self) -> Option<Vector> {
+    pub fn norm(&self) -> Vector {
         Vector::from_points(&self.p_0, &self.p_1)
             .cross(&Vector::from_points(&self.p_0, &self.p_2))
             .unit()
-            .ok()
     }
 
     pub fn is_on(&self, p: &Point) -> bool {
@@ -73,27 +72,24 @@ impl PartialEq for Triangle {
 impl Intersect for Triangle {
     fn intersect(&self, ray: &Ray) -> Vec<Intersection> {
         let mut intersection: Vec<Intersection> = vec![];
-        if let Some(norm) = &self.norm() {
-            if ray.direction.dot(norm).fuzzy_eq(&0.0) {
-                intersection
-            } else {
-                let a = norm.dot(&ray.origin.to_vector());
-                let d = -(norm.dot(&self.p_0.to_vector()));
-                let b = norm.dot(&ray.direction);
-                let t = -(a + d) / b;
-                let surface_point = ray.point_at(t);
-                let normal_v_res = self.norm_at(&surface_point);
-                if let (true, Ok(normal_v)) = (self.is_on(&surface_point), normal_v_res) {
-                    intersection.push(Intersection::new(t, ray.direction, surface_point, normal_v));
-                }
-                intersection
-            }
+        let norm = &self.norm();
+        if ray.direction.dot(norm).fuzzy_eq(&0.0) {
+            return intersection;
         } else {
-            intersection
+            let a = norm.dot(&ray.origin.to_vector());
+            let d = -(norm.dot(&self.p_0.to_vector()));
+            let b = norm.dot(&ray.direction);
+            let t = -(a + d) / b;
+            let surface_point = ray.point_at(t);
+            let normal_v_res = self.norm_at(&surface_point);
+            if let (true, Ok(normal_v)) = (self.is_on(&surface_point), normal_v_res) {
+                intersection.push(Intersection::new(t, ray.direction, surface_point, normal_v));
+            }
         }
+        intersection
     }
 
     fn norm_at(&self, _: &Point) -> Result<Vector, String> {
-        self.norm().ok_or("invalid triangle".to_string())
+        Ok(self.norm())
     }
 }

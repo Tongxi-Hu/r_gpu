@@ -7,13 +7,10 @@ pub struct Ray {
 }
 
 impl Ray {
-    pub fn new(origin: Point, direction: Vector) -> Result<Self, String> {
-        match direction.unit() {
-            Err(str) => Err(str),
-            Ok(norm) => Ok(Self {
-                origin,
-                direction: norm,
-            }),
+    pub fn new(origin: Point, direction: Vector) -> Self {
+        Self {
+            origin,
+            direction: direction.unit(),
         }
     }
 
