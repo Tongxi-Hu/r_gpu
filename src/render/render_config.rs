@@ -12,8 +12,7 @@ use wgpu::{
 };
 
 use crate::{
-    constant::{DEFAULT_MULTI_SAMPLE_COUNT, DEFAULT_SAMPLE_COUNT},
-    content::world::World,
+    constant::DEFAULT_MULTI_SAMPLE_COUNT, content::world::World,
     render::web_gpu::create_vertex_buffer_layout,
 };
 

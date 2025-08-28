@@ -10,7 +10,6 @@ use winit::{
 
 use crate::{
     content::{
-        WithGPUBuffer,
         model_object::{generate_ground, generate_teapot},
         world::World,
     },
