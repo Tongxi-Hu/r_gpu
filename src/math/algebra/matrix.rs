@@ -7,7 +7,7 @@ use super::common::{Determinant, Dimension4, FuzzyEq};
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct Matrix<const D: usize> {
-    pub data: [[f32; D]; D],
+    data: [[f32; D]; D],
 }
 
 unsafe impl<const D: usize> bytemuck::Zeroable for Matrix<D> {}
