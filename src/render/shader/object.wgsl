@@ -41,8 +41,6 @@ var shadow_texture: texture_depth_2d;
 @group(2) @binding(1)
 var shadow_sampler: sampler_comparison;
 
-const PI: f32 = 3.141592653589793238462643;
-
 const SHININESS: f32= 512.0;
 
 @vertex
@@ -87,7 +85,7 @@ fn lighting(color: vec4<f32>, surface_vector: vec4<f32>, surface_light_vector: v
                     shadow_texture,
                     shadow_sampler,
                     light_position.xy + offset,
-                    light_position.z - 0.005  // apply a small bias to avoid acne
+                    light_position.z - 0.001  // apply a small bias to avoid acne
                 );
             }
         }
