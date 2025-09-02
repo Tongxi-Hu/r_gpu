@@ -86,7 +86,7 @@ impl RenderConfig {
                             mag_filter: FilterMode::Linear,
                             min_filter: FilterMode::Linear,
                             mipmap_filter: FilterMode::Nearest,
-                            compare: Some(CompareFunction::Less),
+                            compare: Some(CompareFunction::LessEqual),
                             ..Default::default()
                         },
                     )),
@@ -118,6 +118,7 @@ impl RenderConfig {
             label: None,
             color_attachments: &[Some(RenderPassColorAttachment {
                 view: &self.multi_sample_view,
+                depth_slice: None,
                 resolve_target: Some(
                     &surface_texture
                         .texture

@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 winit = { version = "0.30.11" }
 pollster = { version = "0.4" }
-wgpu = { version = "25.0.2" }
+wgpu = { version = "26.0.1" }
 bytemuck = { version = "1.23.0" }
 obj-rs = { version = "0.7" }
 rand = { version = "0.8" }
